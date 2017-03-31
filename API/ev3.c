@@ -13,6 +13,7 @@
  * Portions created by Simón Rodriguez Perez are Copyright (C) 2014-2015 Simón Rodriguez Perez.
  * All Rights Reserved.
  *
+ * added Sound
  */
 
 #include "ev3.h"
@@ -20,7 +21,7 @@
 int InitEV3()
 {
 	OutputInit();
-	initSensors();
+	InitSensors();
 	ButtonLedInit();
 	LcdInit();
 	LcdClean();
