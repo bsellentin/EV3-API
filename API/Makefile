@@ -1,7 +1,16 @@
 ## Copyright (c) 2015 Ahmad Fatoum
-override PREFIX = C:/CSLite/bin/arm-none-linux-gnueabi-
-CC = $(PREFIX)gcc
-AR = $(PREFIX)ar
+## modified bsellentin
+
+# Windows
+#override PREFIX = C:/CSLite/bin/arm-none-linux-gnueabi-
+#CC = $(PREFIX)gcc
+#AR = $(PREFIX)ar
+
+# Debian stretch
+override PREFIX = /usr/bin/
+CC = $(PREFIX)arm-linux-gnueabi-gcc-6
+AR = $(PREFIX)arm-linux-gnueabi-ar
+
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 
