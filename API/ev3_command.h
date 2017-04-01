@@ -34,7 +34,10 @@ extern "C" {
 #define ev3_command_h
 
 #include <unistd.h>
-#include <sys/time.h>
+/*#include <sys/time.h>
+ * modified Bernd Sellentin
+ */
+#include <time.h>
 #include <signal.h>
 #include <string.h>
 
