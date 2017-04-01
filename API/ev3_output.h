@@ -24,6 +24,10 @@
  * \author John Hansen (bricxcc_at_comcast.net)
  * \date 2013-06-20
  * \version 1
+ *
+ * \author Bernd Sellentin (sel_at_gge-em.org)
+ * \date 2017-01
+ * \version 1.01
  */
 
 #ifdef __cplusplus
@@ -44,6 +48,8 @@ extern "C" {
 #include <limits.h>
 
 #include "ev3_constants.h"
+/* added by B.S */
+#include "ev3_command.h"
 
 bool OutputInit(void);
 
@@ -165,9 +171,12 @@ void OnFwdEx(byte Outputs, char Power, byte reset);
 
 void OnRevEx(byte Outputs, char Power, byte reset);
 
-#define OnFwd(_outputs) OnFwdEx((_outputs), OUT_POWER_DEFAULT, RESET_NONE)
-
-#define OnRev(_outputs) OnRevEx((_outputs), OUT_POWER_DEFAULT, RESET_NONE)
+// this turns motors in wrong direction and is not expected behaviour as known from nxc
+// #define OnFwd(_outputs) OnFwdEx((_outputs), OUT_POWER_DEFAULT, RESET_NONE)
+#define OnFwd(_outputs, _power) OnFwdEx((_outputs), (_power), RESET_NONE)
+// same here
+// #define OnRev(_outputs) OnRevEx((_outputs), OUT_POWER_DEFAULT, RESET_NONE)
+#define OnRev(_outputs, _power) OnRevEx((_outputs), (_power), RESET_NONE)
 
 void OnFwdRegEx(byte Outputs, char Speed, byte RegMode, byte reset);
 
@@ -198,8 +207,9 @@ void OnForSyncEx(byte Outputs, int Time, char Speed, short Turn, bool Stop);
 #define OnForSync(_outputs, _time, _speed) OnForSyncEx((_outputs), (_time), (_speed), 0, TRUE)
 
 void OnForEx(byte Outputs, int Time, char Power, byte reset);
-
-#define OnFor(_outputs, _time) OnForEx((_outputs), (_time), OUT_POWER_DEFAULT, RESET_NONE)
+//#define OnFor(_outputs, _time) OnForEx((_outputs), (_time), OUT_POWER_DEFAULT, RESET_NONE)
+// OUT_POWER_DEFAULT = -127 -> run backwards, better like OnForSync
+#define OnFor(_outputs, _time, _power) OnForEx((_outputs), (_time), (_power), RESET_NONE)
 
 void ResetTachoCount(byte Outputs);
 

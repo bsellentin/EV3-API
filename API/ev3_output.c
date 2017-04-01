@@ -1455,7 +1455,8 @@ void OnForEx(byte Outputs, int Time, char Power, byte reset)
   if (Power != OUT_POWER_DEFAULT)
     SetPower(Outputs, Power);
   OnEx(Outputs, reset);
-  usleep(Time);
+  //usleep(Time); compiles, but motors don't run'
+  Wait(Time);
   OffEx(Outputs, reset);
 }
 
