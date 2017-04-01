@@ -46,6 +46,8 @@ extern "C" {
 #include <errno.h>
 
 #include "ev3_constants.h"
+/* added by B.S */
+#include "ev3_command.h"
 
 typedef struct
 {
