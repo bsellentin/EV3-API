@@ -30,6 +30,13 @@
  * \version 3
  * \note Correct readout for Gyroscop and Infrared Sensor
  *
+ * ----------------------------------------------------------------------------
+ *
+ * \author Bernd Sellentin
+ * \date 2017
+ * \version 3.1
+ * \note Added NXT-Soundsensor 
+ *
  */
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -43,6 +50,7 @@
 #include <stdint.h>
 
 /***********************************/
+// see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list
 // define of Sensor setup
 // TOUCH
 #define TOUCH_TYPE 16
@@ -52,7 +60,7 @@
 #define COL_TYPE 29
 #define COL_REFLECT_MODE 0 	// Reflect
 #define COL_AMBIENT_MODE 1 	// Ambient
-#define COL_COLOR_MODE 2 	//Color
+#define COL_COLOR_MODE 2 	// Color
 
 // Ultrasonic
 #define US_TYPE 30
@@ -64,6 +72,7 @@
 #define GYRO_TYPE 32
 #define GYRO_ANG_MODE 0 	// angle
 #define GYRO_RATE_MODE 1	// rate
+#define GYRO_AR_MODE 3     // angle and rate
 
 // Infrared
 #define IR_TYPE 33
@@ -75,10 +84,19 @@
 #define IIC_TYPE 100
 #define IIC_BYTE_MODE 0
 
-//NXT Temperture
+// NXT Temperature
 #define NXT_TEMP_TYPE 6
 #define NXT_TEMP_C_MODE 0	// Temperature in C
 #define NXT_TEMP_F_MODE 1	// Temperature in F
+
+// NXT Sensors
+#define TYPE_NXT_TOUCH 1     //!< Device is NXT touch sensor
+#define TYPE_NXT_LIGHT 2     //!< Device is NXT light sensor
+#define TYPE_NXT_SOUND 3     //!< Device is NXT sound sensorPort
+#define NXT_SOUND_DB_MODE 0  // Decibels
+#define NXT_SOUND_DBA_MODE 1 // A-Weighted Decibels
+#define TYPE_NXT_COLOR 4     //!< Device is NXT color sensor
+#define TYPE_NXT_IIC 123     //!< Device is NXT IIC sensor
 
 /***********************************/
 
@@ -87,7 +105,7 @@ int g_iicFile = 0;
 int g_analogFile = 0;
 UART* g_uartSensors = 0;
 IIC* g_iicSensors = 0;
-ANALOG* g_analogSensors = 0;
+ANALOG* g_analogSensors = 0;        // struct ANALOG defined in analog.h 
 
 // Mode of inputs
 int sensor_setup_NAME[INPUTS];
@@ -100,7 +118,7 @@ int ir_sensor_channel[INPUTS];
 * 		 date: 2015-02-28
 *
 */
-int initSensors()
+int InitSensors()
 {
     g_uartFile = open("/dev/lms_uart", O_RDWR | O_SYNC);
 	g_iicFile =  open("/dev/lms_iic", O_RDWR | O_SYNC);
@@ -161,7 +179,7 @@ void* readNewDumbSensor(int sensorPort)
 
 void* readOldDumbSensor(int sensorPort)
 {
-	return (void*)&(g_analogSensors->InPin1[sensorPort]);
+	return (void*)&(g_analogSensors->InPin1[sensorPort]);       // DATA16
 }
 
 void* readNxtColor(int sensorPort, DATA8 index)
@@ -198,7 +216,7 @@ void* readNxtColor(int sensorPort, DATA8 index)
 * 		 note: readout for Gyro and Infrared Sensor
 *
 */
-void* readSensorData(int sensorPort)
+void* ReadSensorData(int sensorPort)
 {
 	if (!g_analogSensors || sensorPort < 0 || sensorPort >= INPUTS)
 		return 0;
@@ -234,7 +252,9 @@ void* readSensorData(int sensorPort)
 			return readUartSensor(sensorPort);
 		// Infrared
 		case IR_PROX:
+		    return readUartSensor(sensorPort);
 		case IR_SEEK:
+		    return readUartSensor(sensorPort);
 		case IR_REMOTE:
 			return readUartSensor(sensorPort);
 		// NXT
@@ -244,6 +264,10 @@ void* readSensorData(int sensorPort)
 			return readIicSensor(sensorPort);
 		case NXT_TEMP_F:
 			return readIicSensor(sensorPort);
+        	case NXT_SOUND_DB:
+            		return readOldDumbSensor(sensorPort);
+        	case NXT_SOUND_DBA:
+            		return readOldDumbSensor(sensorPort);
 		default: return 0;
 	}
 
@@ -263,11 +287,13 @@ void* readSensorData(int sensorPort)
 * modified by: Simón Rodriguez Perez
 * 		 date: 2016-04-21
 * 		 note: readout for Gyroscop and Infrared Sensor
-*
+* modified by: Bernd Sellentin
+*        date: 2017-01
+*        note: now with NXT-Soundsensor
 */
-int readSensor(int sensorPort)
+int ReadSensor(int sensorPort)
 {
-	uint64_t* data = readSensorData(sensorPort);
+	uint64_t* data = ReadSensorData(sensorPort);
 	int32_t help=0;
 	if (!data)
 		return -1;
@@ -302,6 +328,12 @@ int readSensor(int sensorPort)
 			return *((DATA16*)data)&0x0FFF;
 		// Gyroskop
 		case GYRO_ANG:
+		    help = *((DATA16*)data)&0xFFFF;         // 1111 1111 1111 1111
+		    if(help & 0x8000)                       // 1000 0000 0000 0000
+			{
+				help = ((help&0x7FFF) - 0x7FFF);    // 0111 1111 1111 1111
+			}
+			return help;
 		case GYRO_RATE:
 			help = *(data)&0xFFFF;
 			if(help & 0x8000)
@@ -342,6 +374,17 @@ int readSensor(int sensorPort)
 				return (-1)*(((help>>4) & 0xFF)*10 + ((help & 0xF) * 10 / 15)) * 9/5 + 320;
 			}
 			return (((help>>4) & 0xFF)*10 + ((help & 0xF) * 10 / 15)) * 9/5 + 320;
+		case NXT_SOUND_DB:
+		    /* max raw value <= 4000 
+		    *  silent = max, loud = min
+		    *  return percent
+		    */ 
+		    help = *((DATA16*)data)&0x0FFF;
+		    return (100 - (help * 100/4100));   // raw_max = 4200
+		    //return help;
+		case NXT_SOUND_DBA:
+		    help = *((DATA16*)data)&0x0FFF;
+		    return (100 - (help * 100/4100));
 		default: break;
 	}
 	return *((DATA16*)data);
@@ -355,7 +398,7 @@ int readSensor(int sensorPort)
 * 		 note: Sensors are working now, but only one sensor is working at once
 *
 */
-int setSensorMode(int sensorPort, int name)
+int SetSensorMode(int sensorPort, int name)
 {
 	static DEVCON devCon;
 
@@ -368,11 +411,13 @@ int setSensorMode(int sensorPort, int name)
 	{
 		case NO_SEN:
 			break;
+		// EV3-Touchsensor
 		case TOUCH_PRESS:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_DUMB;
-			devCon.Type[sensorPort] 		= TOUCH_TYPE;
-			devCon.Mode[sensorPort] 		= TOUCH_PRESS_MODE;
+			devCon.Connection[sensorPort] 		= CONN_INPUT_DUMB;      // in ev3_constants.h
+			devCon.Type[sensorPort] 		= TOUCH_TYPE;           // here on top
+			devCon.Mode[sensorPort] 		= TOUCH_PRESS_MODE;     // here on top
 			break;
+		// EV3-Lightsensor
 		case COL_REFLECT:
 			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 			devCon.Type[sensorPort] 		= COL_TYPE;
@@ -388,6 +433,7 @@ int setSensorMode(int sensorPort, int name)
 			devCon.Type[sensorPort] 		= COL_TYPE;
 			devCon.Mode[sensorPort] 		= COL_COLOR_MODE;
 			break;
+		// EV3-Ultrasonic
 		case US_DIST_CM:
 			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 			devCon.Type[sensorPort] 		= US_TYPE;
@@ -398,10 +444,135 @@ int setSensorMode(int sensorPort, int name)
 			devCon.Type[sensorPort] 		= US_TYPE;
 			devCon.Mode[sensorPort] 		= US_DIST_MM_MODE;
 			break;
+	    // EV3-Gyroskop
+		case GYRO_ANG:
+			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= GYRO_TYPE;
+			devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
+			break;
+		case GYRO_RATE:
+			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= GYRO_TYPE;
+			devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
+			break;
+		// EV3-Infrared
+		case IR_PROX:
+			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= IR_TYPE;
+			devCon.Mode[sensorPort] 		= IR_PROX_MODE;
+			break;
+		case IR_SEEK:
+			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= IR_TYPE;
+			devCon.Mode[sensorPort] 		= IR_SEEK_MODE;
+			break;
+		case IR_REMOTE:
+			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= IR_TYPE;
+			devCon.Mode[sensorPort] 		= IR_REMOTE_MODE;
+			break;
+		// NXT
+		case NXT_IR_SEEKER:
+			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+			devCon.Type[sensorPort] 		= IIC_TYPE;
+			devCon.Mode[sensorPort] 		= IIC_BYTE_MODE;
+			break;
+		case NXT_TEMP_C:
+			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+			devCon.Type[sensorPort] 		= NXT_TEMP_TYPE;
+			devCon.Mode[sensorPort] 		= NXT_TEMP_C_MODE;
+			break;
+		case NXT_TEMP_F:
+			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+			devCon.Type[sensorPort] 		= NXT_TEMP_TYPE;
+			devCon.Mode[sensorPort] 		= NXT_TEMP_F_MODE;
+			break;
+		case NXT_SOUND_DB:
+	        devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
+			devCon.Type[sensorPort] 		= TYPE_NXT_SOUND;
+			devCon.Mode[sensorPort] 		= NXT_SOUND_DB_MODE;
+			break;
+	    case NXT_SOUND_DBA:
+	        devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
+			devCon.Type[sensorPort] 		= TYPE_NXT_SOUND;
+			devCon.Mode[sensorPort] 		= NXT_SOUND_DBA_MODE;
+			break;
 		default: return -1;
 	}
 
 	return 0;
+}
+
+/** Reset the angle of the gyrosensor to 0 by changing modes back and forth
+ *
+ */
+int ResetGyro()
+{   
+    static DEVCON devCon;
+    int sensorPort = 0;
+    int mode = 0;
+    DATA8 type = 0;
+    int resulta;
+    int resultb;
+    
+    sleep(1);
+    
+    for(sensorPort=0; sensorPort<4; sensorPort++)
+    {
+        // switch to other mode
+        if(sensor_setup_NAME[sensorPort] == GYRO_RATE)      // 9
+        {
+            //return sensorPort;  //    works
+            //type = *(g_uartSensors->Raw[sensorPort][g_uartSensors->TypeData[sensorPort][1].Type]); //works not: incompatible types in return
+            // g_uartSensors->Raw[sensorPort][g_uartSensors->Actual[sensorPort]];
+            
+            mode = GYRO_RATE;
+            devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= GYRO_TYPE;        // 32
+			devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;    // 3
+			
+            break;
+        }
+        else if(sensor_setup_NAME[sensorPort] == GYRO_ANG)    // 8
+        {
+            mode = GYRO_ANG;
+            devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Type[sensorPort] 		= GYRO_TYPE;        // 32
+			devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;   // 3
+			
+			break;
+        }
+    }
+    
+    while(!resulta){
+        resulta = ReadSensor(sensorPort);
+    }
+    
+    sleep(1);
+    
+    switch (mode)       // switch to old mode
+    {
+        case GYRO_RATE:
+            devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+	        devCon.Type[sensorPort] 		= GYRO_TYPE;
+	        devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
+	        
+	        break;
+        case GYRO_ANG:
+            devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+	        devCon.Type[sensorPort] 		= GYRO_TYPE;
+	        devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
+	        
+	        break;
+	    default:
+	        return -1;
+    }
+    
+    while(!resultb){
+        resultb = ReadSensor(sensorPort);
+    }
+    sleep(1);
+    return sensorPort+1;
 }
 
 /********************************************************************************************/
@@ -411,7 +582,7 @@ int setSensorMode(int sensorPort, int name)
 * note: the function can only be called once at the beginning
 *
 */
-int setAllSensorMode(int name_1, int name_2, int name_3, int name_4)
+int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4)
 {
 	static DEVCON devCon;
 	int sensorPort = 0;
@@ -534,7 +705,7 @@ int setAllSensorMode(int name_1, int name_2, int name_3, int name_4)
 * note: channel can be modified while running
 *
 */
-int setIRBeaconCH(int sensorPort, int channel)
+int SetIRBeaconCH(int sensorPort, int channel)
 {
 	ir_sensor_channel[sensorPort] = channel;
 	

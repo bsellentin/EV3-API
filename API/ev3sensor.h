@@ -22,6 +22,11 @@
  * \date 2015-02-28
  * \version 2
  * \note Correct data for Touch-, Sonar- and Lightsensor
+ * ----------------------------------------------------------------------------
+ * modified by: Bernd Sellentin
+ *        date:
+ *        note: added NXT-Sound-Sensor, ResetGyro
+ *        note: SetSensorTouch, SetSensorLight, SetSensorColor
  *
  */
 #ifndef EV3SENSOR_H
@@ -30,71 +35,86 @@
 /**
  * Initializes sensor I/O.
  */
-int initSensors();
+int InitSensors();
 
 /**
  * Reads the sensor value from a specific port.
- * Example: readSensor(INPUT_1)
+ * Example: ReadSensor(INPUT_1)
  * Returns a raw sensor value.
  */
-int readSensor(int sensorPort);
+int ReadSensor(int sensorPort);
 
 /**
  * Returns pointer to the current sensor value.
  * The sensor value may be up to 32 bytes long - this function
- * can be used to access it if readSensor() is inadequate.
+ * can be used to access it if ReadSensor() is inadequate.
  */
-void* readSensorData(int sensorPort);
+void* ReadSensorData(int sensorPort);
 
 /**
  * Set sensor mode for a specific port.
- * Example: setSensorMode(INPUT_1, COL_REFLECT)
+ * Example: SetSensorMode(INPUT_1, COL_REFLECT)
  */
-int setSensorMode(int sensorPort, int name);
+int SetSensorMode(int sensorPort, int name);
+
+/**
+ * Reset the angle of the gyrosensor to 0 by changing modes back and forth
+ * Example: ResetGyro();
+ */
+int ResetGyro();
 
 /**
  * Set sensor mode for a all ports
  * Note: Can be only called once
  * Example: setAllSensorMode(TOUCH_PRESS, US_DIST_MM, NO_SEN, COL_COLOR)
  */
-int setAllSensorMode(int name_1, int name_2, int name_3, int name_4);
+int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
 
 /**
  * Select channel for the Beacon control
  * Note: Can be changed while running
  * Example: setAllSensorMode(IN_2, BEACON_CH_1)
  */
-int setIRBeaconCH(int sensorPort, int channel);
+int SetIRBeaconCH(int sensorPort, int channel);
 
 /***********************************/
 // Sensor Names
 #define NO_SEN -1		// No sensor connected
 //Touchsenor
 #define TOUCH_PRESS 1	// Press
+#define SetSensorTouch(_in) SetSensorMode((_in), TOUCH_PRESS)
 
 //Lightsensor
 #define COL_REFLECT 2	// Reflect
 #define COL_AMBIENT 3	// Ambient
 #define COL_COLOR 4		// Color
+#define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
+#define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
 
 //Ultrasonic
 #define US_DIST_CM 5	// Dist in cm
 #define US_DIST_MM 6	// Dist in mm
 #define US_DIST_IN 7	// Dist in inch
+#define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
 
 //Gyroskop
 #define GYRO_ANG 8		// angle
 #define GYRO_RATE 9		// rate
+#define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
 
 //Infrared
 #define IR_PROX 10		// Proximity
 #define IR_SEEK 11		// Seek
 #define IR_REMOTE 12	// Remote Control
+#define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
 
 //NXT 
 #define NXT_IR_SEEKER 20 // Infrared Seeker
-#define NXT_TEMP_C 21 	// Temperature in C
-#define NXT_TEMP_F 22 	// Temperature in F
+#define NXT_TEMP_C 21 	 // Temperature in C
+#define NXT_TEMP_F 22 	 // Temperature in F
+#define NXT_SOUND_DB 23  // Sound Decibels
+#define NXT_SOUND_DBA 24 // Sound A-Weighted Decibels
+#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SOUND_DBA)
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0
