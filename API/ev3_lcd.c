@@ -1692,14 +1692,24 @@ char TextOutEx(int x, int y, char* str, unsigned long options)
 //  byte pixelMode, fillMode;
 //  if (CmdResolveDrawingMode(options, &pixelMode, &fillMode))
 //    CmdDrawRect(x, y, width, height, pixelMode);
-  return 0;
+// mod by selles
+  short X = x;
+  short Y = y;
+  return LcdText(1, X, Y, str);
 }
 
 char NumOutEx(int x, int y, int value, unsigned long options)
 {
   if (!LcdInitialized())
     return 1;
-  return 0;
+
+  int length = snprintf(NULL, 0, "%d", value);
+  char str[length+1];
+  sprintf(str, "%d", value);
+
+  short X = x;
+  short Y = y;
+  return LcdText(1, X, Y, str);
 }
 
 char EllipseOutEx(int x, int y, byte radiusX, byte radiusY, unsigned long options)
