@@ -82,30 +82,31 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define NO_SEN -1		// No sensor connected
 //Touchsenor
 #define TOUCH_PRESS 1	// Press
+#define TOUCH_BUMP 2    // Count
 #define SetSensorTouch(_in) SetSensorMode((_in), TOUCH_PRESS)
 
 //Lightsensor
-#define COL_REFLECT 2	// Reflect
-#define COL_AMBIENT 3	// Ambient
-#define COL_COLOR 4		// Color
+#define COL_REFLECT 3	// Reflect
+#define COL_AMBIENT 4	// Ambient
+#define COL_COLOR 5		// Color
 #define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
 #define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
 
 //Ultrasonic
-#define US_DIST_CM 5	// Dist in cm
-#define US_DIST_MM 6	// Dist in mm
-#define US_DIST_IN 7	// Dist in inch
+#define US_DIST_CM 6	// Dist in cm
+#define US_DIST_MM 7	// Dist in mm
+#define US_DIST_IN 8	// Dist in inch
 #define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
 
 //Gyroskop
-#define GYRO_ANG 8		// angle
-#define GYRO_RATE 9		// rate
+#define GYRO_ANG 9		// angle
+#define GYRO_RATE 10	// rate
 #define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
 
 //Infrared
-#define IR_PROX 10		// Proximity
-#define IR_SEEK 11		// Seek
-#define IR_REMOTE 12	// Remote Control
+#define IR_PROX 11		// Proximity
+#define IR_SEEK 12		// Seek
+#define IR_REMOTE 13	// Remote Control
 #define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
 
 //NXT 

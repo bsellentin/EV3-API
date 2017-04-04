@@ -52,9 +52,10 @@
 /***********************************/
 // see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list
 // define of Sensor setup
-// TOUCH
+// EV3-TOUCH
 #define TOUCH_TYPE 16
 #define TOUCH_PRESS_MODE 0 	// Press
+#define TOUCH_BUMP_MODE 1   // count
 
 // Light
 #define COL_TYPE 29
@@ -72,7 +73,7 @@
 #define GYRO_TYPE 32
 #define GYRO_ANG_MODE 0 	// angle
 #define GYRO_RATE_MODE 1	// rate
-#define GYRO_AR_MODE 3     // angle and rate
+#define GYRO_AR_MODE 3      // angle and rate
 
 // Infrared
 #define IR_TYPE 33
@@ -231,6 +232,8 @@ void* ReadSensorData(int sensorPort)
 		// Touchsensor
 		case TOUCH_PRESS:
 			return readNewDumbSensor(sensorPort);
+		case TOUCH_BUMP:
+		    return readNewDumbSensor(sensorPort);
 		// Lightsensor
 		case COL_REFLECT: 
 			return readUartSensor(sensorPort);
@@ -264,10 +267,10 @@ void* ReadSensorData(int sensorPort)
 			return readIicSensor(sensorPort);
 		case NXT_TEMP_F:
 			return readIicSensor(sensorPort);
-        	case NXT_SOUND_DB:
-            		return readOldDumbSensor(sensorPort);
-        	case NXT_SOUND_DBA:
-            		return readOldDumbSensor(sensorPort);
+        case NXT_SOUND_DB:
+        	return readOldDumbSensor(sensorPort);
+        case NXT_SOUND_DBA:
+        	return readOldDumbSensor(sensorPort);
 		default: return 0;
 	}
 
@@ -312,6 +315,10 @@ int ReadSensor(int sensorPort)
 				return 1;
 			else
 				return -1;
+		case TOUCH_BUMP:
+		    help = *((DATA16*)data);
+			//help = help/256;
+			return help;
 		// Lightsensor
 		case COL_REFLECT:
 			return *((DATA16*)data)&0x00FF;
@@ -413,13 +420,18 @@ int SetSensorMode(int sensorPort, int name)
 			break;
 		// EV3-Touchsensor
 		case TOUCH_PRESS:
-			devCon.Connection[sensorPort] 		= CONN_INPUT_DUMB;      // in ev3_constants.h
+			devCon.Connection[sensorPort]	= CONN_INPUT_DUMB;      // in ev3_constants.h
 			devCon.Type[sensorPort] 		= TOUCH_TYPE;           // here on top
 			devCon.Mode[sensorPort] 		= TOUCH_PRESS_MODE;     // here on top
 			break;
+		case TOUCH_BUMP:
+		    devCon.Connection[sensorPort]	= CONN_INPUT_DUMB;
+			devCon.Type[sensorPort] 		= TOUCH_TYPE;
+			devCon.Mode[sensorPort] 		= TOUCH_BUMP_MODE;
+			break;
 		// EV3-Lightsensor
 		case COL_REFLECT:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+			devCon.Connection[sensorPort]	= CONN_INPUT_UART;
 			devCon.Type[sensorPort] 		= COL_TYPE;
 			devCon.Mode[sensorPort] 		= COL_REFLECT_MODE;
 			break;
@@ -612,6 +624,11 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4)
 				devCon.Connection[sensorPort] 	= CONN_INPUT_DUMB;
 				devCon.Type[sensorPort] 		= TOUCH_TYPE;
 				devCon.Mode[sensorPort] 		= TOUCH_PRESS_MODE;
+				break;
+			case TOUCH_BUMP:
+			    devCon.Connection[sensorPort] 	= CONN_INPUT_DUMB;
+				devCon.Type[sensorPort] 		= TOUCH_TYPE;
+				devCon.Mode[sensorPort] 		= TOUCH_BUMP_MODE;
 				break;
 			// Lightsensor
 			case COL_REFLECT:
