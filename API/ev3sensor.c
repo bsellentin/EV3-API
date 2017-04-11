@@ -43,27 +43,28 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "ev3sensor.h"
-#include "uart.h"
-#include "iic.h"
-#include "analog.h"
+//#include "uart.h"
+//#include "iic.h"
+//#include "analog.h"
+#include "lms2012.h"
 
 #include <stdint.h>
 
 /***********************************/
-// see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list
+// see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list p.100ff
 // define of Sensor setup
 // EV3-TOUCH
 #define TOUCH_TYPE 16
 #define TOUCH_PRESS_MODE 0 	// Press
 #define TOUCH_BUMP_MODE 1   // count
 
-// Light
+// EV3-Light
 #define COL_TYPE 29
 #define COL_REFLECT_MODE 0 	// Reflect
 #define COL_AMBIENT_MODE 1 	// Ambient
 #define COL_COLOR_MODE 2 	// Color
 
-// Ultrasonic
+// EV3-Ultrasonic
 #define US_TYPE 30
 #define US_DIST_CM_MODE 0 	// Dist in cm
 #define US_DIST_MM_MODE 0 	// Dist in mm
@@ -91,24 +92,41 @@
 #define NXT_TEMP_F_MODE 1	// Temperature in F
 
 // NXT Sensors
-#define TYPE_NXT_TOUCH 1     //!< Device is NXT touch sensor
-#define TYPE_NXT_LIGHT 2     //!< Device is NXT light sensor
-#define TYPE_NXT_SOUND 3     //!< Device is NXT sound sensorPort
-#define NXT_SOUND_DB_MODE 0  // Decibels
-#define NXT_SOUND_DBA_MODE 1 // A-Weighted Decibels
-#define TYPE_NXT_COLOR 4     //!< Device is NXT color sensor
-#define TYPE_NXT_IIC 123     //!< Device is NXT IIC sensor
+#define TYPE_NXT_TOUCH 1            //!< Device is NXT touch sensor lms2012.h Z566
+#define NXT_TOUCH_MODE 0
+#define TYPE_NXT_LIGHT 2            //!< Device is NXT light sensor
+#define NXT_LIGHT_REFLECTED_MODE 0
+#define NXT_LIGHT_AMBIENT_MODE 1
+#define TYPE_NXT_SOUND 3            //!< Device is NXT sound sensorPort
+#define NXT_SOUND_DB_MODE 0 
+#define NXT_SOUND_DBA_MODE 1
+#define TYPE_NXT_COLOR 4            //!< Device is NXT color sensor
+#define NXT_COLOR_REFLECTED_MODE 0
+#define NXT_COLOR_AMBIENT_MODE 1
+#define NXT_COLOR_COLOR_MODE 2
+#define NXT_COLOR_GREEN_MODE 3
+#define NXT_COLOR_BLUE_MODE 4
+#define NXT_COLOR_RAW_MODE 5
+#define TYPE_NXT_US 5               //_!< Device is NXT Ultrasonic sensor
+#define NXT_US_DIST_CM_MODE 0
+#define NXT_US_DIST_IN_MODE 1
+#define TYPE_NXT_IIC 123            //!< Device is NXT IIC sensor
 
 /***********************************/
 
 int g_uartFile = 0;
 int g_iicFile = 0;
 int g_analogFile = 0;
+int dcmFile = 0;
 UART* g_uartSensors = 0;
 IIC* g_iicSensors = 0;
-ANALOG* g_analogSensors = 0;        // struct ANALOG defined in analog.h 
+ANALOG* g_analogSensors = 0;        // struct ANALOG defined in analog.h / lms2012.h 
 
-// Mode of inputs
+ANALOG *pAnalog;
+int file;
+
+static DEVCON devCon;
+
 int sensor_setup_NAME[INPUTS];
 int ir_sensor_channel[INPUTS];
 
@@ -121,9 +139,13 @@ int ir_sensor_channel[INPUTS];
 */
 int InitSensors()
 {
+    //static DEVCON devCon;
     g_uartFile = open("/dev/lms_uart", O_RDWR | O_SYNC);
 	g_iicFile =  open("/dev/lms_iic", O_RDWR | O_SYNC);
-	g_analogFile = open("/dev/lms_analog", O_RDWR | O_SYNC);
+	g_analogFile = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
+	dcmFile = open("/dev/lms_dcm", O_RDWR | O_SYNC);
+	
+	file = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
 
     g_uartSensors = (UART*)mmap(0, sizeof(UART), PROT_READ | PROT_WRITE,
                                 MAP_FILE | MAP_SHARED, g_uartFile, 0);
@@ -131,10 +153,25 @@ int InitSensors()
                               MAP_FILE | MAP_SHARED, g_iicFile, 0);
 	g_analogSensors = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
 									MAP_FILE | MAP_SHARED, g_analogFile, 0);
+
+	pAnalog = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
+	                                MAP_FILE | MAP_SHARED, file, 0);
+	
 	int i;
 	for (i = 0; i < INPUTS; i++)
 	{
 		ir_sensor_channel[i] = 0;
+		
+		// build setup string for UART
+        devCon.Connection[i] = pAnalog->InConn[i];
+        devCon.Type[i] = pAnalog->InDcm[i];
+        devCon.Mode[i] = 0;
+        if (devCon.Connection[i] == CONN_INPUT_UART){
+            UARTCTL uartCtrl;
+            uartCtrl.Port = i;
+            devCon.Mode[i] = uartCtrl.TypeData.Mode;
+        }
+        
 	}
 
 	if (g_uartFile && g_iicFile && g_analogFile &&
@@ -176,6 +213,11 @@ void* readIicSensor(int sensorPort)
 void* readNewDumbSensor(int sensorPort)
 {
 	return (void*)&(g_analogSensors->InPin6[sensorPort]);
+}
+
+int readEV3TouchSensor (int sensorPort)
+{
+    return (unsigned int)pAnalog->Pin6[sensorPort][pAnalog->Actual[sensorPort]];
 }
 
 void* readOldDumbSensor(int sensorPort)
@@ -271,6 +313,10 @@ void* ReadSensorData(int sensorPort)
         	return readOldDumbSensor(sensorPort);
         case NXT_SOUND_DBA:
         	return readOldDumbSensor(sensorPort);
+        case NXT_TOUCH:
+            return readOldDumbSensor(sensorPort);
+        case NXT_LIGHT:
+            return readOldDumbSensor(sensorPort);
 		default: return 0;
 	}
 
@@ -292,7 +338,7 @@ void* ReadSensorData(int sensorPort)
 * 		 note: readout for Gyroscop and Infrared Sensor
 * modified by: Bernd Sellentin
 *        date: 2017-01
-*        note: now with NXT-Soundsensor
+*        note: more NXT-sensors
 */
 int ReadSensor(int sensorPort)
 {
@@ -315,10 +361,12 @@ int ReadSensor(int sensorPort)
 				return 1;
 			else
 				return -1;
-		case TOUCH_BUMP:
+		/*case TOUCH_BUMP:
+		mentionned in ev3 firmware docs, but not used in EV-G, lejos, ev3-dev, ...
 		    help = *((DATA16*)data);
 			//help = help/256;
 			return help;
+		*/
 		// Lightsensor
 		case COL_REFLECT:
 			return *((DATA16*)data)&0x00FF;
@@ -326,6 +374,16 @@ int ReadSensor(int sensorPort)
 			return *((DATA16*)data)&0x00FF;
 		case COL_COLOR:
 			return *((DATA16*)data)&0x000F;
+			/*
+			COLOR_NONE = 0
+            COLOR_BLACK = 1
+            COLOR_BLUE = 2
+            COLOR_GREEN = 3
+            COLOR_YELLOW = 4
+            COLOR_RED = 5
+            COLOR_WHITE = 6
+            COLOR_BROWN = 7
+            */
 		// Ultrasonic
 		case US_DIST_CM:
 			return (*((DATA16*)data)&0x0FFF)/10;
@@ -392,11 +450,38 @@ int ReadSensor(int sensorPort)
 		case NXT_SOUND_DBA:
 		    help = *((DATA16*)data)&0x0FFF;
 		    return (100 - (help * 100/4100));
+		case NXT_TOUCH:
+		    help = *((DATA16*)data);
+		    help = help/256;
+		    return help;
+		case NXT_LIGHT:
+		    help = *((DATA16*)data);
+		    return help;
 		default: break;
 	}
 	return *((DATA16*)data);
 }
 
+int GetSensorMode(int sensorPort)
+{
+    int mode;
+    UARTCTL uartCtrl;
+    uartCtrl.Port = sensorPort;
+    ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
+    mode = uartCtrl.TypeData.Mode;
+
+    return mode;
+}
+int GetSensorType(int sensorPort)
+{
+    int type;
+    UARTCTL uartCtrl;
+    uartCtrl.Port = sensorPort;
+    ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
+    type = uartCtrl.TypeData.Type;
+
+    return type;
+}
 /********************************************************************************************/
 /**
 * Initialisation for one Sensor 
@@ -407,8 +492,11 @@ int ReadSensor(int sensorPort)
 */
 int SetSensorMode(int sensorPort, int name)
 {
-	static DEVCON devCon;
-
+	//static DEVCON devCon;
+    int status;
+    int i;
+    char buf[4];
+    
 	if (!g_analogSensors || sensorPort < 0 || sensorPort >= INPUTS)
 		return -1;
 
@@ -509,18 +597,99 @@ int SetSensorMode(int sensorPort, int name)
 			devCon.Type[sensorPort] 		= TYPE_NXT_SOUND;
 			devCon.Mode[sensorPort] 		= NXT_SOUND_DBA_MODE;
 			break;
+		case NXT_TOUCH:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_TOUCH;
+		    devCon.Mode[sensorPort] 		= NXT_TOUCH_MODE;
+		    break;
+		case NXT_LIGHT:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_LIGHT;
+		    devCon.Mode[sensorPort] 		= NXT_LIGHT_REFLECTED_MODE;
+		    break;
 		default: return -1;
 	}
-
+	g_uartSensors->Status[sensorPort]      &= ~UART_DATA_READY;
+	
+	// SETUP DRIVERS
+	for (i = 0; i < 4; i++)
+	{ // Initialise pin setup string to do nothing
+        buf[i] = '-';
+    }
+    // insert "pins" in setup string
+    UARTCTL uartCtrl;
+    uartCtrl.Port = sensorPort;
+    buf[sensorPort] = uartCtrl.TypeData.Pins;
+     // write setup string to "Device Connection Manager" driver
+     write(dcmFile, buf, 4);
+	
+	// write setup string to "UART Device Controller" driver
+    ioctl(g_uartFile, UART_SET_CONN, &devCon);
+    
+	status = wait_no_zero_status(sensorPort);
+	if (status & UART_PORT_CHANGED){
+	    //UARTCTL uartCtrl;
+	    //uartCtrl.Port = sensorPort;
+	    uartCtrl.Mode = devCon.Mode[sensorPort];
+	    ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
+	    
+	    //status = wait_no_zero_status(sensorPort);
+	    // Clear the port changed flag for the current port.
+	    ioctl(g_uartFile, UART_CLEAR_CHANGED, &uartCtrl);
+	    g_uartSensors->Status[sensorPort] &= ~UART_PORT_CHANGED;
+	
+	}
 	return 0;
 }
+
+int wait_no_zero_status(int sensorPort)
+{
+    int status;
+    int i=0;
+    
+    for(i=0;i<50;i++){
+        status = g_uartSensors->Status[sensorPort];
+        if(status != 0){
+            break;
+        }
+        sleep(0.1);
+    }
+    return status;
+}
+
+int clear_change(int sensorPort)
+{
+    //static DEVCON devCon;
+    int status;
+    int i=0;
+    for(i=0;i<50;i++){
+        status = g_uartSensors->Status[sensorPort];
+        if ((status & UART_DATA_READY != 0) && (status & UART_PORT_CHANGED) == 0){
+            break;
+        }
+        devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
+		devCon.Type[sensorPort] 		= 0;
+		devCon.Mode[sensorPort] 		= 0;
+		ioctl(g_uartFile, UART_CLEAR_CHANGED, &devCon);
+		sleep(0.1);
+    }
+}
+
+/*struct TypeData get_mode_info(int sensorPort, int mode)
+{
+    UARTCTL uartCtl;
+    uartCtl.Port = sensorPort;
+    uartCtl.Mode = mode;
+    ioctl(g_uartFile, UART_READ_MODE_INFO, uartCtl);
+    return uartCtl.TypeData;
+}*/
 
 /** Reset the angle of the gyrosensor to 0 by changing modes back and forth
  *
  */
 int ResetGyro()
 {   
-    static DEVCON devCon;
+    //static DEVCON devCon;
     int sensorPort = 0;
     int mode = 0;
     DATA8 type = 0;
@@ -542,7 +711,7 @@ int ResetGyro()
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 			devCon.Type[sensorPort] 		= GYRO_TYPE;        // 32
 			devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;    // 3
-			
+			ioctl(g_uartFile, UART_SET_CONN, &devCon);
             break;
         }
         else if(sensor_setup_NAME[sensorPort] == GYRO_ANG)    // 8
@@ -551,7 +720,7 @@ int ResetGyro()
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 			devCon.Type[sensorPort] 		= GYRO_TYPE;        // 32
 			devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;   // 3
-			
+			ioctl(g_uartFile, UART_SET_CONN, &devCon);
 			break;
         }
     }
@@ -568,13 +737,13 @@ int ResetGyro()
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 	        devCon.Type[sensorPort] 		= GYRO_TYPE;
 	        devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
-	        
+	        ioctl(g_uartFile, UART_SET_CONN, &devCon);
 	        break;
         case GYRO_ANG:
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
 	        devCon.Type[sensorPort] 		= GYRO_TYPE;
 	        devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
-	        
+	        ioctl(g_uartFile, UART_SET_CONN, &devCon);
 	        break;
 	    default:
 	        return -1;
@@ -596,7 +765,7 @@ int ResetGyro()
 */
 int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4)
 {
-	static DEVCON devCon;
+	//static DEVCON devCon;
 	int sensorPort = 0;
 	
 	int name[4] = {};

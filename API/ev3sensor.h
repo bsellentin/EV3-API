@@ -55,7 +55,14 @@ void* ReadSensorData(int sensorPort);
  * Set sensor mode for a specific port.
  * Example: SetSensorMode(INPUT_1, COL_REFLECT)
  */
+int GetSensorMode(int sensorPort);
+int GetSensorType(int sensorPort);
 int SetSensorMode(int sensorPort, int name);
+int wait_no_zero_status(int sensorPort);
+int clear_change(int sensorPort);
+struct TypeData get_mode_info(int sensorPort, int mode);
+
+int readEV3TouchSensor(int sensorPort);
 
 /**
  * Reset the angle of the gyrosensor to 0 by changing modes back and forth
@@ -78,44 +85,48 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
 int SetIRBeaconCH(int sensorPort, int channel);
 
 /***********************************/
-// Sensor Names
-#define NO_SEN -1		// No sensor connected
+// Sensor Names = SensorType + SensorMode
+#define NO_SEN -1		    // No sensor connected
 //Touchsenor
-#define TOUCH_PRESS 1	// Press
-#define TOUCH_BUMP 2    // Count
+#define TOUCH_PRESS 1	    // Press
+#define TOUCH_BUMP 2        // Count
 #define SetSensorTouch(_in) SetSensorMode((_in), TOUCH_PRESS)
 
 //Lightsensor
-#define COL_REFLECT 3	// Reflect
-#define COL_AMBIENT 4	// Ambient
-#define COL_COLOR 5		// Color
+#define COL_REFLECT 3	    // Reflect
+#define COL_AMBIENT 4	    // Ambient
+#define COL_COLOR 5		    // Color
 #define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
 #define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
 
 //Ultrasonic
-#define US_DIST_CM 6	// Dist in cm
-#define US_DIST_MM 7	// Dist in mm
-#define US_DIST_IN 8	// Dist in inch
+#define US_DIST_CM 6	    // Dist in cm
+#define US_DIST_MM 7	    // Dist in mm
+#define US_DIST_IN 8	    // Dist in inch
 #define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
 
 //Gyroskop
-#define GYRO_ANG 9		// angle
-#define GYRO_RATE 10	// rate
+#define GYRO_ANG 9		    // angle
+#define GYRO_RATE 10	    // rate
 #define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
 
 //Infrared
-#define IR_PROX 11		// Proximity
-#define IR_SEEK 12		// Seek
-#define IR_REMOTE 13	// Remote Control
+#define IR_PROX 11		    // Proximity
+#define IR_SEEK 12		    // Seek
+#define IR_REMOTE 13	    // Remote Control
 #define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
 
 //NXT 
-#define NXT_IR_SEEKER 20 // Infrared Seeker
-#define NXT_TEMP_C 21 	 // Temperature in C
-#define NXT_TEMP_F 22 	 // Temperature in F
-#define NXT_SOUND_DB 23  // Sound Decibels
-#define NXT_SOUND_DBA 24 // Sound A-Weighted Decibels
-#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SOUND_DBA)
+#define NXT_IR_SEEKER 20    // Infrared Seeker
+#define NXT_TEMP_C 21 	    // Temperature in C
+#define NXT_TEMP_F 22 	    // Temperature in F
+#define NXT_SOUND_DB 23     // Sound Decibels
+#define NXT_SOUND_DBA 24    // Sound A-Weighted Decibels
+#define NXT_TOUCH 25        // 
+#define NXT_LIGHT 26        // Light sensor V1
+#define NXT_COLOR 27        // Light sensor V2
+#define NXT_US_DIST_CM 28   // Ultrasonic sensor 
+#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SOUND_DB)
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0
