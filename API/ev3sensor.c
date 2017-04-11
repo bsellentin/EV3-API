@@ -43,10 +43,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "ev3sensor.h"
-//#include "uart.h"
-//#include "iic.h"
-//#include "analog.h"
-#include "lms2012.h"
+#include "uart.h"
+#include "iic.h"
+#include "analog.h"
+//#include "lms2012.h"
 
 #include <stdint.h>
 

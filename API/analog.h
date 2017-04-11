@@ -36,6 +36,9 @@ COLORSTRUCT;
  *  \verbatim
  */
 
+#define   ANALOG_DEVICE         "lms_analog"          //!< ANALOG device name
+#define   ANALOG_DEVICE_NAME    "/dev/lms_analog"     //!< ANALOG device file name
+
 typedef   struct
 {
   DATA16  InPin1[INPUTS];         //!< Analog value at input port connection 1

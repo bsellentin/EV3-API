@@ -20,6 +20,10 @@
 #define    UART_DATA_LENGTH		MAX_DEVICE_DATALENGTH
 #define    UART_BUFFER_SIZE		64
 
+#define   UART_PORT_CHANGED       0x01        //!< Input port changed
+#define   UART_DATA_READY         0x08        //!< Data is ready
+#define   UART_WRITE_REQUEST      0x10        //!< Write request
+
 typedef   struct
 {
   TYPES   TypeData[INPUTS][MAX_DEVICE_MODES]; //!< TypeData
@@ -37,5 +41,18 @@ typedef   struct
   DATA8   OutputLength[INPUTS];
 }
 UART;
+
+typedef   struct
+{
+  TYPES   TypeData;
+  DATA8   Port;
+  DATA8   Mode;
+}
+UARTCTL;
+
+#define   UART_SET_CONN           _IOWR('u',0,DEVCON)
+#define   UART_READ_MODE_INFO     _IOWR('u',1,UARTCTL)
+#define   UART_NACK_MODE_INFO     _IOWR('u',2,UARTCTL)
+#define   UART_CLEAR_CHANGED      _IOWR('u',3,UARTCTL)
 
 #endif //UART_H_
