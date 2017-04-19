@@ -25,7 +25,7 @@
  * ----------------------------------------------------------------------------
  * modified by: Bernd Sellentin
  *        date:
- *        note: added NXT-Sound-Sensor, ResetGyro
+ *        note: added NXT-Touch-, Light- and Sound-Sensor, ResetGyro
  *        note: SetSensorTouch, SetSensorLight, SetSensorColor
  *
  */
@@ -55,14 +55,21 @@ void* ReadSensorData(int sensorPort);
  * Set sensor mode for a specific port.
  * Example: SetSensorMode(INPUT_1, COL_REFLECT)
  */
-int GetSensorMode(int sensorPort);
-int GetSensorType(int sensorPort);
 int SetSensorMode(int sensorPort, int name);
+
+int GetSensorMode(int sensorPort);
+
+/**
+ * Set sensor mode type for a specific port.
+ * Example: GetSensorType(IN_1)
+ */
+int GetSensorType(int sensorPort);
+
 int wait_no_zero_status(int sensorPort);
 int clear_change(int sensorPort);
-struct TypeData get_mode_info(int sensorPort, int mode);
+//struct TypeData get_mode_info(int sensorPort, int mode);
 
-int readEV3TouchSensor(int sensorPort);
+//int readEV3TouchSensor(int sensorPort);
 
 /**
  * Reset the angle of the gyrosensor to 0 by changing modes back and forth
@@ -88,9 +95,9 @@ int SetIRBeaconCH(int sensorPort, int channel);
 // Sensor Names = SensorType + SensorMode
 #define NO_SEN -1		    // No sensor connected
 //Touchsenor
-#define TOUCH_PRESS 1	    // Press
-#define TOUCH_BUMP 2        // Count
-#define SetSensorTouch(_in) SetSensorMode((_in), TOUCH_PRESS)
+#define TOUCH 1	            // Press
+#define BUMPS 2             // Count
+#define SetSensorTouch(_in) SetSensorMode((_in), TOUCH)
 
 //Lightsensor
 #define COL_REFLECT 3	    // Reflect
@@ -120,13 +127,18 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define NXT_IR_SEEKER 20    // Infrared Seeker
 #define NXT_TEMP_C 21 	    // Temperature in C
 #define NXT_TEMP_F 22 	    // Temperature in F
-#define NXT_SOUND_DB 23     // Sound Decibels
-#define NXT_SOUND_DBA 24    // Sound A-Weighted Decibels
+#define NXT_SND_DB 23       // Sound Decibels
+#define NXT_SND_DBA 24      // Sound A-Weighted Decibels
 #define NXT_TOUCH 25        // 
-#define NXT_LIGHT 26        // Light sensor V1
-#define NXT_COLOR 27        // Light sensor V2
-#define NXT_US_DIST_CM 28   // Ultrasonic sensor 
-#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SOUND_DB)
+#define NXT_REFLECT 26      // Light sensor V1
+#define NXT_AMBIENT 27
+#define NXT_COLOR 28        // Light sensor V2
+#define NXT_US_CM 29        // Ultrasonic sensor 
+#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
+
+// HiTechnic
+#define HT_DIR_DC 30        // Infrared Seeker DC constant IR signals
+#define HT_DIR_AC 31        // AC modulated IR signals
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0

@@ -28,6 +28,8 @@ typedef   enum
   STOP          = 4                     //!< Stopped
 }
 RESULT;
+
+
 typedef   struct
 {
   TYPES   TypeData[INPUTS][MAX_DEVICE_MODES]; //!< TypeData
@@ -47,6 +49,20 @@ typedef   struct
 }
 IIC;
 
+
+#define   IIC_PORT_CHANGED       0x01         //!< Input port changed
+#define   IIC_DATA_READY         0x08         //!< Data is ready
+#define   IIC_WRITE_REQUEST      0x10         //!< Write request
+
+typedef   struct
+{
+  TYPES   TypeData;
+  DATA8   Port;
+  DATA8   Mode;
+}
+IICCTL;
+
+
 typedef   struct
 {
   RESULT  Result;
@@ -61,5 +77,25 @@ typedef   struct
 IICDAT;
 
 
+typedef   struct
+{
+  DATA8   Port;
+  DATA16  Time;
+  DATA8   Type;
+  DATA8   Mode;
+  DATA8   Manufacturer[IIC_NAME_LENGTH + 1];
+  DATA8   SensorType[IIC_NAME_LENGTH + 1];
+  DATA8   SetupLng;
+  ULONG   SetupString;
+  DATA8   PollLng;
+  ULONG   PollString;
+  DATA8   ReadLng;
+}
+IICSTR;
+
+#define   IIC_SET_CONN            _IOWR('i',2,DEVCON)
+#define   IIC_READ_TYPE_INFO      _IOWR('i',3,IICCTL)
+#define   IIC_SETUP               _IOWR('i',5,IICDAT)
+#define   IIC_SET                 _IOWR('i',6,IICSTR)
 
 #endif //IIC_H_
