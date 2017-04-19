@@ -134,6 +134,8 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define NXT_AMBIENT 27
 #define NXT_COLOR 28        // Light sensor V2
 #define NXT_US_CM 29        // Ultrasonic sensor 
+#define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
+#define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
 #define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
 
 // HiTechnic
