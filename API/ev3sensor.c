@@ -233,6 +233,7 @@ void* readIicSensor(int sensorPort)
 	if (!g_iicSensors)
 		return 0;
     UWORD currentSensorSlot = g_iicSensors->Actual[sensorPort];
+    //(unsigned char)pIic->Raw[IIC_PORT][pIic->Actual[IIC_PORT]][0]
     return g_iicSensors->Raw[sensorPort][currentSensorSlot];
 }
 
@@ -340,6 +341,12 @@ void* ReadSensorData(int sensorPort)
             return readOldDumbSensor(sensorPort);
         case NXT_AMBIENT:
             return readOldDumbSensor(sensorPort);
+        case NXT_COL_REF:
+            return (void*)&g_analogSensors->NxtCol[sensorPort].ADRaw[RED];
+        case NXT_COL_AMB:
+            return (void*)&g_analogSensors->NxtCol[sensorPort].ADRaw[BLANK];
+        case HT_DIR_DC:
+            return readIicSensor(sensorPort);
 		default: return 0;
 	}
 
@@ -504,6 +511,8 @@ int ReadSensor(int sensorPort)
 		    value = *((DATA16*)data);
 		    help = (3411-value)*100/(3411-663);
 		    return help;
+		case HT_DIR_DC:
+		    return *((DATA16*)data)&0x000F;
 		default: break;
 	}
 	return *((DATA16*)data);
@@ -731,12 +740,33 @@ int SetSensorMode(int sensorPort, int name)
 		    devCon.Mode[sensorPort] 		= NXT_LIGHT_AMBIENT_MODE;
 		    pins = 0x30;
 		    break;
+		case NXT_COL_REFLECTED_MODE:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_COLOR;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_COL;
+		    devCon.Mode[sensorPort] 		= NXT_COL_REFLECTED_MODE;
+		    pins = 0x0E;
+		    break;
+		case NXT_COL_AMB:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_COLOR;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_COL;
+		    devCon.Mode[sensorPort] 		= NXT_COL_AMBIENT_MODE;
+		    pins = 0x11;
+		    break;
 		// HiTechnic Infrared Seeker
 		case HT_DIR_DC:
+		    //{IICDAT iicDat;
 		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
 		    devCon.Type[sensorPort]         = TYPE_HT_DIR;
 		    devCon.Mode[sensorPort]         = HT_DIR_DC_MODE;
 		    pins = 0x46;
+		    /*iicDat.Port = sensorPort;
+		    iicDat.Time = 0;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 1;           // Direction data = 1 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x10;    // I2C address
+		    iicDat.WrData[1] = 0x42;} */  // register to read
+		    break;
 		default: return -1;
 	}
 	
@@ -744,32 +774,18 @@ int SetSensorMode(int sensorPort, int name)
     // write setup string to "Device Connection Manager" driver
     write(dcmFile, buf, 4); // necessary for analog devices
 	
-	if ( devCon.Connection[sensorPort] == CONN_INPUT_UART){
+	if (devCon.Connection[sensorPort] == CONN_INPUT_UART){
 	    g_uartSensors->Status[sensorPort]      &= ~UART_DATA_READY;
 	
-	    // SETUP DRIVERS
-	    //for (i = 0; i < 4; i++)
-	    //{ // Initialise pin setup string to do nothing
-        //    buf[i] = '-';
-        //}
-        // insert "pins" in setup string
         UARTCTL uartCtrl;
         uartCtrl.Port = sensorPort;
         uartCtrl.Mode = devCon.Mode[sensorPort];
         //ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
-        
-	
 	    // write setup string to "UART Device Controller" driver
         ioctl(g_uartFile, UART_SET_CONN, &devCon);
         
 	    status = wait_no_zero_status(sensorPort);
 	    if (status & UART_PORT_CHANGED){
-	        //UARTCTL uartCtrl;
-	        //uartCtrl.Port = sensorPort;
-	        
-	        //ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
-	        
-	        //status = wait_no_zero_status(sensorPort);
 	        // Clear the port changed flag for the current port.
 	        ioctl(g_uartFile, UART_CLEAR_CHANGED, &uartCtrl);
 	        g_uartSensors->Status[sensorPort] &= ~UART_PORT_CHANGED;

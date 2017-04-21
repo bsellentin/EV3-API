@@ -12,6 +12,16 @@
  *  \verbatim
  */
 
+typedef   enum
+{
+  RED           =  0,
+  GREEN         =  1,
+  BLUE          =  2,
+  BLANK         =  3,
+  COLORS
+}
+COLOR;
+
 #define   COLORS                        4
 #define   CALPOINTS                     3
 

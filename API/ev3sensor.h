@@ -60,7 +60,8 @@ int SetSensorMode(int sensorPort, int name);
 int GetSensorMode(int sensorPort);
 
 /**
- * Set sensor mode type for a specific port.
+ * Get sensor type for a specific port.
+ * Only for developing
  * Example: GetSensorType(IN_1)
  */
 int GetSensorType(int sensorPort);
@@ -68,8 +69,6 @@ int GetSensorType(int sensorPort);
 int wait_no_zero_status(int sensorPort);
 int clear_change(int sensorPort);
 //struct TypeData get_mode_info(int sensorPort, int mode);
-
-//int readEV3TouchSensor(int sensorPort);
 
 /**
  * Reset the angle of the gyrosensor to 0 by changing modes back and forth
@@ -132,15 +131,17 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define NXT_TOUCH 25        // 
 #define NXT_REFLECT 26      // Light sensor V1
 #define NXT_AMBIENT 27
-#define NXT_COLOR 28        // Light sensor V2
-#define NXT_US_CM 29        // Ultrasonic sensor 
+#define NXT_COL_REF 28      // Light sensor V2
+#define NXT_COL_AMB 29
+#define NXT_COL_COL 30
+#define NXT_US_CM 31        // Ultrasonic sensor 
 #define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
 #define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
 #define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
 
 // HiTechnic
-#define HT_DIR_DC 30        // Infrared Seeker DC constant IR signals
-#define HT_DIR_AC 31        // AC modulated IR signals
+#define HT_DIR_DC 32        // Infrared Seeker DC constant IR signals
+#define HT_DIR_AC 33        // AC modulated IR signals
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0
