@@ -22,6 +22,19 @@ typedef   enum
 }
 COLOR;
 
+/* Constants related to color sensor value using */
+/* Color sensor as color detector                */
+typedef   enum
+{
+  BLACKCOLOR   = 1,
+  BLUECOLOR    = 2,
+  GREENCOLOR   = 3,
+  YELLOWCOLOR  = 4,
+  REDCOLOR     = 5,
+  WHITECOLOR   = 6
+}
+NXTCOLOR;
+
 #define   COLORS                        4
 #define   CALPOINTS                     3
 

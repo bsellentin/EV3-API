@@ -68,7 +68,6 @@ int GetSensorType(int sensorPort);
 
 int wait_no_zero_status(int sensorPort);
 int clear_change(int sensorPort);
-//struct TypeData get_mode_info(int sensorPort, int mode);
 
 /**
  * Reset the angle of the gyrosensor to 0 by changing modes back and forth
@@ -89,6 +88,7 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
  * Example: setAllSensorMode(IN_2, BEACON_CH_1)
  */
 int SetIRBeaconCH(int sensorPort, int channel);
+
 
 /***********************************/
 // Sensor Names = SensorType + SensorMode

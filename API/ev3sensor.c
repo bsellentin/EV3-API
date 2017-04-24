@@ -35,7 +35,7 @@
  * \author Bernd Sellentin
  * \date 2017
  * \version 3.1
- * \note Added NXT-Soundsensor 
+ * \note Added NXT-sensors
  *
  */
 #include <fcntl.h>
@@ -155,13 +155,11 @@ int ir_sensor_channel[INPUTS];
 */
 int InitSensors()
 {
-    //static DEVCON devCon;
     g_uartFile = open("/dev/lms_uart", O_RDWR | O_SYNC);
 	g_iicFile =  open("/dev/lms_iic", O_RDWR | O_SYNC);
 	g_analogFile = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
 	dcmFile = open("/dev/lms_dcm", O_RDWR | O_SYNC);
-	
-	//file = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
+
 
     g_uartSensors = (UART*)mmap(0, sizeof(UART), PROT_READ | PROT_WRITE,
                                 MAP_FILE | MAP_SHARED, g_uartFile, 0);
@@ -170,9 +168,7 @@ int InitSensors()
 	g_analogSensors = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
 									MAP_FILE | MAP_SHARED, g_analogFile, 0);
 
-	//pAnalog = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
-	//                                MAP_FILE | MAP_SHARED, file, 0);
-	
+
 	int i;
 	for (i = 0; i < INPUTS; i++)
 	{
@@ -187,7 +183,6 @@ int InitSensors()
         devCon.Mode[i] = 0;
         if (devCon.Connection[i] == CONN_INPUT_DUMB){
             devCon.Type[i] = 16;
-            //devCon.Mode[i] = 0;
         }
         if (devCon.Connection[i] == CONN_INPUT_UART){
             UARTCTL uartCtrl;
@@ -197,7 +192,6 @@ int InitSensors()
             devCon.Type[i] = uartCtrl.TypeData.Type;
             devCon.Mode[i] = uartCtrl.TypeData.Mode;
         }
-        
 	}
 
 	if (g_uartFile && g_iicFile && g_analogFile &&
@@ -247,25 +241,251 @@ void* readOldDumbSensor(int sensorPort)
 	return (void*)&(g_analogSensors->InPin1[sensorPort]);       // DATA16
 }
 
-void* readNxtColor(int sensorPort, DATA8 index)
-{
-	return 0; // Not supported
-/*
-	DATAF result = DATAF_NAN;
-	cInputCalibrateColor(g_analogSensors->NxtCol[sensorPort], g_analogSensors->NxtCol[sensorPort].SensorRaw);
 
-	switch (g_sensorMode[sensorPort])
-	{
-	case 2: return cInputCalculateColor(g_analogSensors->NxtCol[sensorPort]); //NXT-COL-COL
-    case 1: return g_analogSensors->NxtCol[sensorPort].ADRaw[BLANK]; // NXT-COL-AMB
-    case 0: return g_analogSensors->NxtCol[sensorPort].ADRaw[RED]; // NXT-COL-RED
-    case 3: return g_analogSensors->NxtCol[sensorPort].ADRaw[GREEN]; // NXT-COL-GRN
-    case 4: return g_analogSensors->NxtCol[sensorPort].ADRaw[BLUE]; // NXT-COL-BLU
-    case 5: return g_analogSensors->NxtCol[sensorPort].SensorRaw[Index]; // NXT-COL-RAW
-	}
-	return result;
-*/
+/* stuff from c_input.c **********************************************/
+
+#define   DATAF_NAN     ((float)0 / (float)0) //(0x7FC00000) from bytecodes.h l.1495
+
+#define   FALSE                         0
+#define   TRUE                          1
+
+#define   SENSOR_RESOLUTION             1023L
+
+/* Remember this is ARM AD converter  - 3,3 VDC as max voltage      */
+/* When in color mode background value is substracted => min = 0!!! */
+#define   AD_MAX                        2703L
+#define   AD_FS                         3300L
+
+#define   COLORSENSORBGMIN              (214/(AD_FS/AD_MAX))
+#define   COLORSENSORMIN                (1L/(AD_FS/AD_MAX)) /* 1 inserted else div 0 (1L/(120/AD_MAX)) */
+#define   COLORSENSORMAX                ((AD_MAX * AD_FS)/3300)
+#define   COLORSENSORPCTDYN             (UBYTE)(((COLORSENSORMAX - COLORSENSORMIN) * 100L)/AD_MAX)
+#define   COLORSENSORBGPCTDYN           (UBYTE)(((COLORSENSORMAX - COLORSENSORBGMIN) * 100L)/AD_MAX)
+
+void      cInputCalcFullScale(UWORD *pRawVal, UWORD ZeroPointOffset, UBYTE PctFullScale, UBYTE InvStatus)
+{
+  if (*pRawVal >= ZeroPointOffset)
+  {
+    *pRawVal -= ZeroPointOffset;
+  }
+  else
+  {
+    *pRawVal = 0;
+  }
+
+  *pRawVal = (*pRawVal * 100)/PctFullScale;
+  if (*pRawVal > SENSOR_RESOLUTION)
+  {
+    *pRawVal = SENSOR_RESOLUTION;
+  }
+  if (TRUE == InvStatus)
+  {
+    *pRawVal = SENSOR_RESOLUTION - *pRawVal;
+  }
 }
+
+void cInputCalibrateColor(COLORSTRUCT *pC, UWORD *pNewVals)
+{
+
+  UBYTE CalRange;
+
+  if ((pC->ADRaw[BLANK]) < pC->CalLimits[1])
+  {
+    CalRange = 2;
+  }
+  else
+  {
+    if ((pC->ADRaw[BLANK]) < pC->CalLimits[0])
+    {
+      CalRange = 1;
+    }
+    else
+    {
+      CalRange = 0;
+    }
+  }
+
+  pNewVals[RED] = 0;
+  if ((pC->ADRaw[RED]) > (pC->ADRaw[BLANK]))
+  {
+    pNewVals[RED] = (UWORD)(((ULONG)((pC->ADRaw[RED]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][RED])) >> 16);
+  }
+
+  pNewVals[GREEN] = 0;
+  if ((pC->ADRaw[GREEN]) > (pC->ADRaw[BLANK]))
+  {
+     pNewVals[GREEN] = (UWORD)(((ULONG)((pC->ADRaw[GREEN]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][GREEN])) >> 16);
+  }
+
+  pNewVals[BLUE] = 0;
+  if ((pC->ADRaw[BLUE]) > (pC->ADRaw[BLANK]))
+  {
+    pNewVals[BLUE] = (UWORD)(((ULONG)((pC->ADRaw[BLUE]) -(pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][BLUE])) >> 16);
+  }
+
+  pNewVals[BLANK] = (pC->ADRaw[BLANK]);
+  cInputCalcFullScale(&(pNewVals[BLANK]), COLORSENSORBGMIN, COLORSENSORBGPCTDYN, FALSE);
+  (pNewVals[BLANK]) = (UWORD)(((ULONG)(pNewVals[BLANK]) * (pC->Calibration[CalRange][BLANK])) >> 16);
+}
+
+DATAF     cInputCalculateColor(COLORSTRUCT *pC)
+{
+  DATAF   Result ;
+
+
+  Result  =  DATAF_NAN;
+
+  // Color Sensor values has been calculated -
+  // now calculate the color and put it in Sensor value
+  
+
+  if (((pC->SensorRaw[RED]) > (pC->SensorRaw[BLUE] )) &&
+      ((pC->SensorRaw[RED]) > (pC->SensorRaw[GREEN])))
+  {
+
+    // If all 3 colors are less than 65 OR (Less that 110 and bg less than 40)
+    if (((pC->SensorRaw[RED])   < 65) ||
+        (((pC->SensorRaw[BLANK]) < 40) && ((pC->SensorRaw[RED])  < 110)))
+    {
+      Result  =  (DATAF)BLACKCOLOR;
+    }
+    else
+    {
+      if (((((pC->SensorRaw[BLUE]) >> 2)  + ((pC->SensorRaw[BLUE]) >> 3) + (pC->SensorRaw[BLUE])) < (pC->SensorRaw[GREEN])) &&
+          ((((pC->SensorRaw[GREEN]) << 1)) > (pC->SensorRaw[RED])))
+      {
+        Result  =  (DATAF)YELLOWCOLOR;
+      }
+      else
+      {
+
+        if ((((pC->SensorRaw[GREEN]) << 1) - ((pC->SensorRaw[GREEN]) >> 2)) < (pC->SensorRaw[RED]))
+        {
+
+          Result  =  (DATAF)REDCOLOR;
+        }
+        else
+        {
+
+          if ((((pC->SensorRaw[BLUE]) < 70) ||
+              ((pC->SensorRaw[GREEN]) < 70)) ||
+             (((pC->SensorRaw[BLANK]) < 140) && ((pC->SensorRaw[RED]) < 140)))
+          {
+            Result  =  (DATAF)BLACKCOLOR;
+          }
+          else
+          {
+            Result  =  (DATAF)WHITECOLOR;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+
+    // Red is not the dominant color
+    if ((pC->SensorRaw[GREEN]) > (pC->SensorRaw[BLUE]))
+    {
+
+      // Green is the dominant color
+      // If all 3 colors are less than 40 OR (Less that 70 and bg less than 20)
+      if (((pC->SensorRaw[GREEN])  < 40) ||
+          (((pC->SensorRaw[BLANK]) < 30) && ((pC->SensorRaw[GREEN])  < 70)))
+      {
+        Result  =  (DATAF)BLACKCOLOR;
+      }
+      else
+      {
+        if ((((pC->SensorRaw[BLUE]) << 1)) < (pC->SensorRaw[RED]))
+        {
+          Result  =  (DATAF)YELLOWCOLOR;
+        }
+        else
+        {
+          if ((((pC->SensorRaw[RED]) + ((pC->SensorRaw[RED])>>2)) < (pC->SensorRaw[GREEN])) ||
+              (((pC->SensorRaw[BLUE]) + ((pC->SensorRaw[BLUE])>>2)) < (pC->SensorRaw[GREEN])))
+          {
+            Result  =  (DATAF)GREENCOLOR;
+          }
+          else
+          {
+            if ((((pC->SensorRaw[RED]) < 70) ||
+                ((pC->SensorRaw[BLUE]) < 70)) ||
+                (((pC->SensorRaw[BLANK]) < 140) && ((pC->SensorRaw[GREEN]) < 140)))
+            {
+              Result  =  (DATAF)BLACKCOLOR;
+            }
+            else
+            {
+              Result  =  (DATAF)WHITECOLOR;
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+
+      // Blue is the most dominant color
+      // Colors can be blue, white or black
+      // If all 3 colors are less than 48 OR (Less that 85 and bg less than 25)
+      if (((pC->SensorRaw[BLUE])   < 48) ||
+          (((pC->SensorRaw[BLANK]) < 25) && ((pC->SensorRaw[BLUE])  < 85)))
+      {
+        Result  =  (DATAF)BLACKCOLOR;
+      }
+      else
+      {
+        if ((((((pC->SensorRaw[RED]) * 48) >> 5) < (pC->SensorRaw[BLUE])) &&
+            ((((pC->SensorRaw[GREEN]) * 48) >> 5) < (pC->SensorRaw[BLUE])))
+            ||
+            (((((pC->SensorRaw[RED])   * 58) >> 5) < (pC->SensorRaw[BLUE])) ||
+             ((((pC->SensorRaw[GREEN]) * 58) >> 5) < (pC->SensorRaw[BLUE]))))
+        {
+          Result  =  (DATAF)BLUECOLOR;
+        }
+        else
+        {
+
+          // Color is white or Black
+          if ((((pC->SensorRaw[RED])  < 60) ||
+              ((pC->SensorRaw[GREEN]) < 60)) ||
+             (((pC->SensorRaw[BLANK]) < 110) && ((pC->SensorRaw[BLUE]) < 120)))
+          {
+            Result  =  (DATAF)BLACKCOLOR;
+          }
+          else
+          {
+            if ((((pC->SensorRaw[RED])  + ((pC->SensorRaw[RED])   >> 3)) < (pC->SensorRaw[BLUE])) ||
+                (((pC->SensorRaw[GREEN]) + ((pC->SensorRaw[GREEN]) >> 3)) < (pC->SensorRaw[BLUE])))
+            {
+              Result  =  (DATAF)BLUECOLOR;
+            }
+            else
+            {
+              Result  =  (DATAF)WHITECOLOR;
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  return (Result);
+}
+
+/* end stuff c_input.c ***********************************************/
+
+uint32_t readNxtColor(int sensorPort)
+{
+    uint32_t color = 0;
+    cInputCalibrateColor(&g_analogSensors->NxtCol[sensorPort], g_analogSensors->NxtCol[sensorPort].SensorRaw);
+    color = (uint32_t)cInputCalculateColor(&g_analogSensors->NxtCol[sensorPort]);
+    return color;
+}
+
 
 /********************************************************************************************/
 /**
@@ -342,9 +562,13 @@ void* ReadSensorData(int sensorPort)
         case NXT_AMBIENT:
             return readOldDumbSensor(sensorPort);
         case NXT_COL_REF:
+            cInputCalibrateColor(&g_analogSensors->NxtCol[sensorPort], g_analogSensors->NxtCol[sensorPort].SensorRaw);
             return (void*)&g_analogSensors->NxtCol[sensorPort].ADRaw[RED];
         case NXT_COL_AMB:
+            cInputCalibrateColor(&g_analogSensors->NxtCol[sensorPort], g_analogSensors->NxtCol[sensorPort].SensorRaw);
             return (void*)&g_analogSensors->NxtCol[sensorPort].ADRaw[BLANK];
+        case NXT_COL_COL:
+            return (void*)readNxtColor(sensorPort);
         case HT_DIR_DC:
             return readIicSensor(sensorPort);
 		default: return 0;
@@ -373,6 +597,7 @@ void* ReadSensorData(int sensorPort)
 int ReadSensor(int sensorPort)
 {
 	uint64_t* data = ReadSensorData(sensorPort);
+	
 	int32_t help=0;
 	int32_t value = 0;
 	
@@ -396,39 +621,39 @@ int ReadSensor(int sensorPort)
 		// Lightsensor
 		case COL_REFLECT:
 		    /* 
-		    *  raw_max = 100, raw_min = 0
-		    */
+		     *  raw_max = 100, raw_min = 0
+		     */
 			return *((DATA16*)data)&0x00FF;
 		case COL_AMBIENT:
 		    /* 
-		    *  raw_max = 100, raw_min = 0
-		    */
+		     *  raw_max = 100, raw_min = 0
+		     */
 			return *((DATA16*)data)&0x00FF;
 		case COL_COLOR:
 			/* raw_max = 8, raw_min = 0
-			* COLOR_NONE = 0
-            * COLOR_BLACK = 1
-            * COLOR_BLUE = 2
-            * COLOR_GREEN = 3
-            * COLOR_YELLOW = 4
-            * COLOR_RED = 5
-            * COLOR_WHITE = 6
-            * COLOR_BROWN = 7
-            */
+			 * COLOR_NONE = 0
+             * COLOR_BLACK = 1
+             * COLOR_BLUE = 2
+             * COLOR_GREEN = 3
+             * COLOR_YELLOW = 4
+             * COLOR_RED = 5
+             * COLOR_WHITE = 6
+             * COLOR_BROWN = 7
+             */
 			return *((DATA16*)data)&0x000F;
 			
 		// Ultrasonic
 		case US_DIST_CM:
 		    /* 
-		    *  raw_max = 2550, raw_min = 0
-		    */
+		     *  raw_max = 2550, raw_min = 0
+		     */
 			return (*((DATA16*)data)&0x0FFF)/10;
 		case US_DIST_MM:
 			return *((DATA16*)data)&0x0FFF;
 		case US_DIST_IN:
 		    /* 
-		    *  raw_max = 1000, raw_min = 0
-		    */
+		     *  raw_max = 1000, raw_min = 0
+		     */
 		    //help = *((DATA16*)data)&0x0FFF;
 			//return (double)help;
 			return *((DATA16*)data)&0x0FFF;
@@ -482,35 +707,54 @@ int ReadSensor(int sensorPort)
 			return (((help>>4) & 0xFF)*10 + ((help & 0xF) * 10 / 15)) * 9/5 + 320;
 		case NXT_SND_DB:
 		    /* 
-		    *  raw_max = 0, raw_min = 4095
-		    */ 
+		     *  raw_max = 0, raw_min = 4095
+		     */ 
 		    help = *((DATA16*)data)&0x0FFF;
 		    return (100 - (help * 100/4095));
 		    //return help;
 		case NXT_SND_DBA:
 		    /* 
-		    *  raw_max = 0, raw_min = 4095
-		    */ 
+		     *  raw_max = 0, raw_min = 4095
+		     */ 
 		    help = *((DATA16*)data)&0x0FFF;
-		    return (100 - (help * 100/4100));
+		    return (100 - (help * 100/4095));
 		case NXT_TOUCH:
 		    value = *((DATA16*)data);
 		    help = (value < 3800) ? 1 : 0;
 		    return help;
 		case NXT_REFLECT:
 		    /*
-		    * raw_max = 445, raw_min = 3372
-		    */
+		     * raw_max = 445, raw_min = 3372
+		     */
 		    value = *((DATA16*)data);
 		    help = (3372-value)*100/(3372-445);
 		    return help;
 		case NXT_AMBIENT:
 		    /*
-		    * raw_max = 663, raw_min = 3411
-		    */
+		     * raw_max = 663, raw_min = 3411
+		     */
 		    value = *((DATA16*)data);
 		    help = (3411-value)*100/(3411-663);
 		    return help;
+		case NXT_COL_REF:
+		    /*
+		     * raw_max = 1500, raw_min = 200
+		     * raw_max seems to less
+		     */
+		    value = *((DATA16*)data);
+		    help = 100 - (1800-value)*100/(1800-200);
+		    return help;
+		case NXT_COL_AMB:
+		    /*
+		     * raw_max = 2900, raw_min = 200
+		     */
+		    value = *((DATA16*)data);
+		    help = 100 - (2900-value)*100/(2900-200);
+		    return help;
+		case NXT_COL_COL:
+		    //value = *((DATA16*)data)&0x000F;
+		    //return *((DATA16*)data);
+		    return readNxtColor(sensorPort);
 		case HT_DIR_DC:
 		    return *((DATA16*)data)&0x000F;
 		default: break;
@@ -751,6 +995,12 @@ int SetSensorMode(int sensorPort, int name)
 		    devCon.Type[sensorPort] 		= TYPE_NXT_COL;
 		    devCon.Mode[sensorPort] 		= NXT_COL_AMBIENT_MODE;
 		    pins = 0x11;
+		    break;
+		case NXT_COL_COL:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_COLOR;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_COL;
+		    devCon.Mode[sensorPort] 		= NXT_COL_COLOR_MODE;
+		    pins = 0x0D;
 		    break;
 		// HiTechnic Infrared Seeker
 		case HT_DIR_DC:
