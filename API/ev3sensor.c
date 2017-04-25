@@ -52,35 +52,38 @@
 
 /***********************************/
 // see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list p.100ff
-// define of Sensor setup
+/**
+ * \brief Identifier for sensor types and modes
+ */
+ 
 // EV3-TOUCH
 #define TOUCH_TYPE 16
-#define TOUCH_PRESS_MODE 0 	// Press
-#define TOUCH_BUMP_MODE 1   // count
+#define TOUCH_PRESS_MODE 0          // Press
+#define TOUCH_BUMP_MODE 1           // count
 
 // EV3-Light
 #define COL_TYPE 29
-#define COL_REFLECT_MODE 0 	// Reflect
-#define COL_AMBIENT_MODE 1 	// Ambient
-#define COL_COLOR_MODE 2 	// Color
+#define COL_REFLECT_MODE 0          // Reflect
+#define COL_AMBIENT_MODE 1          // Ambient
+#define COL_COLOR_MODE 2            // Color
 
 // EV3-Ultrasonic
 #define US_TYPE 30
-#define US_DIST_CM_MODE 0 	// Dist in cm
-#define US_DIST_MM_MODE 0 	// Dist in mm
-#define US_DIST_IN_MODE 1 	// Dist in inch
+#define US_DIST_CM_MODE 0           // Dist in cm
+#define US_DIST_MM_MODE 0           // Dist in mm
+#define US_DIST_IN_MODE 1           // Dist in inch
 
 // Gyroskop
 #define GYRO_TYPE 32
-#define GYRO_ANG_MODE 0 	// angle
-#define GYRO_RATE_MODE 1	// rate
-#define GYRO_AR_MODE 3      // angle and rate
+#define GYRO_ANG_MODE 0             // angle
+#define GYRO_RATE_MODE 1            // rate
+#define GYRO_AR_MODE 3              // angle and rate
 
 // Infrared
 #define IR_TYPE 33
-#define IR_PROX_MODE 0		// Proximity
-#define IR_SEEK_MODE 1		// Seek
-#define IR_REMOTE_MODE 2	// Remote Control
+#define IR_PROX_MODE 0              // Proximity
+#define IR_SEEK_MODE 1              // Seek
+#define IR_REMOTE_MODE 2            // Remote Control
 
 // IIC 
 #define IIC_TYPE 100
@@ -88,8 +91,8 @@
 
 // NXT Temperature
 #define NXT_TEMP_TYPE 6
-#define NXT_TEMP_C_MODE 0	// Temperature in C
-#define NXT_TEMP_F_MODE 1	// Temperature in F
+#define NXT_TEMP_C_MODE 0           // Temperature in C
+#define NXT_TEMP_F_MODE 1           // Temperature in F
 
 // NXT Sensors
 #define TYPE_NXT_TOUCH 1            //!< Device is NXT touch sensor lms2012.h Z566
@@ -137,10 +140,8 @@ UART* g_uartSensors = 0;
 IIC* g_iicSensors = 0;
 ANALOG* g_analogSensors = 0;        // struct ANALOG defined in analog.h / lms2012.h 
 
-//ANALOG *pAnalog;
-//int file;
-
 static DEVCON devCon;
+static IICDAT iicDat;
 char buf[4];
 
 int sensor_setup_NAME[INPUTS];
@@ -156,17 +157,17 @@ int ir_sensor_channel[INPUTS];
 int InitSensors()
 {
     g_uartFile = open("/dev/lms_uart", O_RDWR | O_SYNC);
-	g_iicFile =  open("/dev/lms_iic", O_RDWR | O_SYNC);
-	g_analogFile = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
-	dcmFile = open("/dev/lms_dcm", O_RDWR | O_SYNC);
+    g_iicFile =  open("/dev/lms_iic", O_RDWR | O_SYNC);
+    g_analogFile = open(ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
+    dcmFile = open("/dev/lms_dcm", O_RDWR | O_SYNC);
 
 
     g_uartSensors = (UART*)mmap(0, sizeof(UART), PROT_READ | PROT_WRITE,
                                 MAP_FILE | MAP_SHARED, g_uartFile, 0);
     g_iicSensors = (IIC*)mmap(0, sizeof(IIC), PROT_READ | PROT_WRITE,
                               MAP_FILE | MAP_SHARED, g_iicFile, 0);
-	g_analogSensors = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
-									MAP_FILE | MAP_SHARED, g_analogFile, 0);
+    g_analogSensors = (ANALOG*)mmap(0, sizeof(ANALOG), PROT_READ | PROT_WRITE,
+                                    MAP_FILE | MAP_SHARED, g_analogFile, 0);
 
 
 	int i;
@@ -192,6 +193,7 @@ int InitSensors()
             devCon.Type[i] = uartCtrl.TypeData.Type;
             devCon.Mode[i] = uartCtrl.TypeData.Mode;
         }
+        // TODO: if CONN_NXT_IIC
 	}
 
 	if (g_uartFile && g_iicFile && g_analogFile &&
@@ -200,12 +202,6 @@ int InitSensors()
 	return -1;
 }
 
-/*DATA8 getSensorConnectionType(int sensorPort)
-{
-	if (!g_analogSensors || sensorPort < 0 || sensorPort >= INPUTS)
-		return 0;
-	return g_analogSensors->InConn[sensorPort];
-}*/
 
 /********************************************************************************************/
 /**
@@ -513,31 +509,31 @@ void* ReadSensorData(int sensorPort)
 		case CONN_ERROR: 
 		case NO_SEN: 
 			return 0;
-		// Touchsensor
+		// EV3 Touchsensor
 		case TOUCH:
 			return readNewDumbSensor(sensorPort);
 		case BUMPS:
 		    return readNewDumbSensor(sensorPort);
-		// Lightsensor
+		// EV3 Colorsensor
 		case COL_REFLECT: 
 			return readUartSensor(sensorPort);
 		case COL_AMBIENT: 
 			return readUartSensor(sensorPort);
 		case COL_COLOR: 
 			return readUartSensor(sensorPort);
-		// Ultrasonic
+		// EV3 Ultrasonic
 		case US_DIST_CM: 
 			return readUartSensor(sensorPort);
 		case US_DIST_MM: 
 			return readUartSensor(sensorPort);
 		case US_DIST_IN: 
 			return readUartSensor(sensorPort);
-		// Gyroskop
+		// EV3 Gyroskop
 		case GYRO_ANG: 
 			return readUartSensor(sensorPort);
 		case GYRO_RATE: 
 			return readUartSensor(sensorPort);
-		// Infrared
+		// EV3 Infrared
 		case IR_PROX:
 		    return readUartSensor(sensorPort);
 		case IR_SEEK:
@@ -552,9 +548,9 @@ void* ReadSensorData(int sensorPort)
 		case NXT_TEMP_F:
 			return readIicSensor(sensorPort);
         case NXT_SND_DB:
-        	return readOldDumbSensor(sensorPort);
+            return readOldDumbSensor(sensorPort);
         case NXT_SND_DBA:
-        	return readOldDumbSensor(sensorPort);
+            return readOldDumbSensor(sensorPort);
         case NXT_TOUCH:
             return readOldDumbSensor(sensorPort);
         case NXT_REFLECT:
@@ -569,12 +565,19 @@ void* ReadSensorData(int sensorPort)
             return (void*)&g_analogSensors->NxtCol[sensorPort].ADRaw[BLANK];
         case NXT_COL_COL:
             return (void*)readNxtColor(sensorPort);
+        case NXT_US_CM:
+            return readIicSensor(sensorPort);
+        case NXT_US_IN:
+            return readIicSensor(sensorPort);
+        // HiTechnic
         case HT_DIR_DC:
             return readIicSensor(sensorPort);
-		default: return 0;
-	}
+        case HT_DIR_AC:
+            return readIicSensor(sensorPort);
+        default: return 0;
+    }
 
-	return 0;
+    return 0;
 }
 
 /********************************************************************************************/
@@ -621,16 +624,16 @@ int ReadSensor(int sensorPort)
 		// Lightsensor
 		case COL_REFLECT:
 		    /* 
-		     *  raw_max = 100, raw_min = 0
+		     *  RawMax = 100, RawMin = 0
 		     */
 			return *((DATA16*)data)&0x00FF;
 		case COL_AMBIENT:
 		    /* 
-		     *  raw_max = 100, raw_min = 0
+		     *  RawMax = 100, RawMin = 0
 		     */
 			return *((DATA16*)data)&0x00FF;
 		case COL_COLOR:
-			/* raw_max = 8, raw_min = 0
+			/* RawMax = 8, RawMin = 0
 			 * COLOR_NONE = 0
              * COLOR_BLACK = 1
              * COLOR_BLUE = 2
@@ -645,17 +648,15 @@ int ReadSensor(int sensorPort)
 		// Ultrasonic
 		case US_DIST_CM:
 		    /* 
-		     *  raw_max = 2550, raw_min = 0
+		     *  RawMax = 2550, RawMin = 0
 		     */
 			return (*((DATA16*)data)&0x0FFF)/10;
 		case US_DIST_MM:
 			return *((DATA16*)data)&0x0FFF;
 		case US_DIST_IN:
 		    /* 
-		     *  raw_max = 1000, raw_min = 0
+		     *  RawMax = 1000, RawMin = 0
 		     */
-		    //help = *((DATA16*)data)&0x0FFF;
-			//return (double)help;
 			return *((DATA16*)data)&0x0FFF;
 		// Gyroskop
 		case GYRO_ANG:
@@ -707,14 +708,14 @@ int ReadSensor(int sensorPort)
 			return (((help>>4) & 0xFF)*10 + ((help & 0xF) * 10 / 15)) * 9/5 + 320;
 		case NXT_SND_DB:
 		    /* 
-		     *  raw_max = 0, raw_min = 4095
+		     *  RawMax = 0, RawMin = 4095
 		     */ 
 		    help = *((DATA16*)data)&0x0FFF;
 		    return (100 - (help * 100/4095));
 		    //return help;
 		case NXT_SND_DBA:
 		    /* 
-		     *  raw_max = 0, raw_min = 4095
+		     *  RawMax = 0, RawMin = 4095
 		     */ 
 		    help = *((DATA16*)data)&0x0FFF;
 		    return (100 - (help * 100/4095));
@@ -724,29 +725,29 @@ int ReadSensor(int sensorPort)
 		    return help;
 		case NXT_REFLECT:
 		    /*
-		     * raw_max = 445, raw_min = 3372
+		     * RawMax = 445, RawMin = 3372
 		     */
 		    value = *((DATA16*)data);
 		    help = (3372-value)*100/(3372-445);
 		    return help;
 		case NXT_AMBIENT:
 		    /*
-		     * raw_max = 663, raw_min = 3411
+		     * RawMax = 663, RawMin = 3411
 		     */
 		    value = *((DATA16*)data);
 		    help = (3411-value)*100/(3411-663);
 		    return help;
 		case NXT_COL_REF:
 		    /*
-		     * raw_max = 1500, raw_min = 200
-		     * raw_max seems to less
+		     * RawMax = 1500, RawMin = 200
+		     * RawMax seems to less
 		     */
 		    value = *((DATA16*)data);
 		    help = 100 - (1800-value)*100/(1800-200);
 		    return help;
 		case NXT_COL_AMB:
 		    /*
-		     * raw_max = 2900, raw_min = 200
+		     * RawMax = 2900, RawMin = 200
 		     */
 		    value = *((DATA16*)data);
 		    help = 100 - (2900-value)*100/(2900-200);
@@ -755,7 +756,21 @@ int ReadSensor(int sensorPort)
 		    //value = *((DATA16*)data)&0x000F;
 		    //return *((DATA16*)data);
 		    return readNxtColor(sensorPort);
+		case NXT_US_CM:
+		    /*
+		     * RawMax = 255, RawMin = 0
+		     * SiMax = 255, SiMin = 0
+		     */
+		    return *((DATA16*)data);
+		case NXT_US_IN:
+		    /*
+		     * RawMax = 255, RawMin = 0
+		     * SiMax = 100, SiMin = 0
+		     */
+		    return *((DATA16*)data);
 		case HT_DIR_DC:
+		    return *((DATA16*)data)&0x000F;
+		case HT_DIR_AC:
 		    return *((DATA16*)data)&0x000F;
 		default: break;
 	}
@@ -837,7 +852,7 @@ int GetSensorType(int sensorPort)
 */
 int SetSensorMode(int sensorPort, int name)
 {
-	//static DEVCON devCon;
+	// data from http://ev3.fantastic.computer/doxygen/types.html
     int status;
     int i;
     int pins;
@@ -941,18 +956,39 @@ int SetSensorMode(int sensorPort, int name)
 			devCon.Type[sensorPort] 		= IIC_TYPE;
 			devCon.Mode[sensorPort] 		= IIC_BYTE_MODE;
 			pins = 0x46;
+			iicDat.Port = sensorPort;
+		    iicDat.Time = 0;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 1;               // Direction data = 1 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x01;        // I2C address
+		    iicDat.WrData[1] = 0x42;        // register to read
 			break;
 		case NXT_TEMP_C:
 			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
 			devCon.Type[sensorPort] 		= NXT_TEMP_TYPE;
 			devCon.Mode[sensorPort] 		= NXT_TEMP_C_MODE;
 			pins = 0x46;
+			iicDat.Port = sensorPort;
+		    iicDat.Time = 300;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 2;               // data = 2 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x4C;        // I2C address
+		    iicDat.WrData[1] = 0x00;        // register to read
 			break;
 		case NXT_TEMP_F:
 			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
 			devCon.Type[sensorPort] 		= NXT_TEMP_TYPE;
 			devCon.Mode[sensorPort] 		= NXT_TEMP_F_MODE;
 			pins = 0x46;
+			iicDat.Port = sensorPort;
+		    iicDat.Time = 300;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 2;               // data = 2 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x4C;        // I2C address
+		    iicDat.WrData[1] = 0x00;        // register to read
 			break;
 		case NXT_SND_DB:
 	        devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
@@ -1002,24 +1038,63 @@ int SetSensorMode(int sensorPort, int name)
 		    devCon.Mode[sensorPort] 		= NXT_COL_COLOR_MODE;
 		    pins = 0x0D;
 		    break;
+		case NXT_US_CM:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_US;
+		    devCon.Mode[sensorPort] 		= NXT_US_CM_MODE;
+		    pins = 0x31;
+		    iicDat.Port = sensorPort;
+		    iicDat.Time = 300;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 1;               // data = 1 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x01;        // I2C address
+		    iicDat.WrData[1] = 0x42;        // register to read
+		    break;
+		case NXT_US_IN:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+		    devCon.Type[sensorPort] 		= TYPE_NXT_US;
+		    devCon.Mode[sensorPort] 		= NXT_US_CM_MODE;
+		    pins = 0x31;
+		    iicDat.Port = sensorPort;
+		    iicDat.Time = 300;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 1;               // data = 1 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x01;        // I2C address
+		    iicDat.WrData[1] = 0x42;        // register to read
+		    break;
 		// HiTechnic Infrared Seeker
 		case HT_DIR_DC:
-		    //{IICDAT iicDat;
 		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
 		    devCon.Type[sensorPort]         = TYPE_HT_DIR;
 		    devCon.Mode[sensorPort]         = HT_DIR_DC_MODE;
 		    pins = 0x46;
-		    /*iicDat.Port = sensorPort;
-		    iicDat.Time = 0;
+		    iicDat.Port = sensorPort;
+		    iicDat.Time = 100;
 		    iicDat.Repeat = 0;
-		    iicDat.RdLng = 1;           // Direction data = 1 byte
+		    iicDat.RdLng = 1;               // Direction data = 1 byte
 		    iicDat.WrLng = 2;
-		    iicDat.WrData[0] = 0x10;    // I2C address
-		    iicDat.WrData[1] = 0x42;} */  // register to read
+		    iicDat.WrData[0] = 0x10;        // I2C address
+		    iicDat.WrData[1] = 0x42;        // register to read
+		    break;
+		case HT_DIR_AC:
+		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
+		    devCon.Type[sensorPort]         = TYPE_HT_DIR;
+		    devCon.Mode[sensorPort]         = HT_DIR_DC_MODE;
+		    pins = 0x46;
+		    iicDat.Port = sensorPort;
+		    iicDat.Time = 100;
+		    iicDat.Repeat = 0;
+		    iicDat.RdLng = 1;               // Direction data = 1 byte
+		    iicDat.WrLng = 2;
+		    iicDat.WrData[0] = 0x10;        // I2C address
+		    iicDat.WrData[1] = 0x49;        // register to read
 		    break;
 		default: return -1;
 	}
 	
+	g_analogSensors->Updated[sensorPort]    =  0;
 	buf[sensorPort] = pins;
     // write setup string to "Device Connection Manager" driver
     write(dcmFile, buf, 4); // necessary for analog devices
@@ -1030,7 +1105,6 @@ int SetSensorMode(int sensorPort, int name)
         UARTCTL uartCtrl;
         uartCtrl.Port = sensorPort;
         uartCtrl.Mode = devCon.Mode[sensorPort];
-        //ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
 	    // write setup string to "UART Device Controller" driver
         ioctl(g_uartFile, UART_SET_CONN, &devCon);
         
@@ -1040,8 +1114,29 @@ int SetSensorMode(int sensorPort, int name)
 	        ioctl(g_uartFile, UART_CLEAR_CHANGED, &uartCtrl);
 	        g_uartSensors->Status[sensorPort] &= ~UART_PORT_CHANGED;
 	    }
-	
 	}
+
+	if(devCon.Connection[sensorPort] == CONN_NXT_IIC){
+	    g_iicSensors->Status[sensorPort] &= ~IIC_DATA_READY;
+	    
+	    IICCTL iicCtrl;
+	    iicCtrl.Port = sensorPort;
+	    iicCtrl.Mode = devCon.Mode[sensorPort];
+	    ioctl(g_iicFile, IIC_SET_CONN, &devCon);
+	    
+	    /*int i, status;
+	    for(i=0;i<50;i++){
+	        status = g_iicSensors->Status[sensorPort];
+	        if(status != 0){
+	            break;
+	        }
+	        sleep(0.1);
+	    }
+	    if(status && IIC_PORT_CHANGED){
+	    
+	    }*/
+	}
+
 	return 0;
 }
 

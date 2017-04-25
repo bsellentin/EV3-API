@@ -91,7 +91,11 @@ int SetIRBeaconCH(int sensorPort, int channel);
 
 
 /***********************************/
-// Sensor Names = SensorType + SensorMode
+
+/**
+ * \brief Identifiers of sensor names
+ *   = sensor type + sensor mode
+ */
 #define NO_SEN -1		    // No sensor connected
 //Touchsenor
 #define TOUCH 1	            // Press
@@ -134,14 +138,15 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define NXT_COL_REF 28      // Light sensor V2
 #define NXT_COL_AMB 29
 #define NXT_COL_COL 30
-#define NXT_US_CM 31        // Ultrasonic sensor 
+#define NXT_US_CM 31        // Ultrasonic sensor
+#define NXT_US_IN 32
 #define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
 #define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
 #define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
 
 // HiTechnic
-#define HT_DIR_DC 32        // Infrared Seeker DC constant IR signals
-#define HT_DIR_AC 33        // AC modulated IR signals
+#define HT_DIR_DC 33        // Infrared Seeker DC constant IR signals
+#define HT_DIR_AC 34        // AC modulated IR signals
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0
