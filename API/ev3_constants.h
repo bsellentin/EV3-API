@@ -54,7 +54,8 @@ extern "C" {
 #define TRUE  1 /*!< A true value */
 #define FALSE 0 /*!< A false value */
 
-#define NUM_INPUTS     4   /*!< Number of input  ports in the system */
+#define INPUTS         4   /*!< Number of input  ports in the system */
+#define OUTPUTS        4   //!< Number of output ports in the system
 #define NUM_LEDS       4   /*!< Number of LEDs in the system */
 #define LCD_WIDTH      178 /*!< LCD horizontal pixels */
 #define LCD_HEIGHT     128 /*!< LCD vertical pixels */
@@ -161,17 +162,24 @@ extern "C" {
 #define RESET_ALL            0x68 /*!< Reset all tachometer counters */
 /** @} */  // end of TachoResetConstants group
 
-#define NUM_OUTPUTS 4   //!< Number of output ports in the system
 
 // Reserved device types
 #define DEVICE_TYPE_NXT_TOUCH           1  //!< Device is NXT touch sensor
 #define DEVICE_TYPE_NXT_LIGHT           2  //!< Device is NXT light sensor
 #define DEVICE_TYPE_NXT_SOUND           3  //!< Device is NXT sound sensor
 #define DEVICE_TYPE_NXT_COLOR           4  //!< Device is NXT color sensor
+#define DEVICE_TYPE_NXT_US              5  //!< Device is NXT ultrasonic sensor
+#define DEVICE_TYPE_NXT_TEMP            6  
 #define DEVICE_TYPE_TACHO               7  //!< Device is a tacho motor
 #define DEVICE_TYPE_MINITACHO           8  //!< Device is a mini tacho motor
 #define DEVICE_TYPE_NEWTACHO            9  //!< Device is a new tacho motor
+#define DEVICE_TYPE_EV3_TOUCH          16
+#define DEVICE_TYPE_EV3_COL            29
+#define DEVICE_TYPE_EV3_US             30
+#define DEVICE_TYPE_EV3_GYRO           32
+#define DEVICE_TYPE_EV3_IR             33
 #define DEVICE_TYPE_THIRD_PARTY_START  50
+#define DEVICE_TYPE_HT_DIR             52  //!< Device is HiTechnic Infrared Seeker
 #define DEVICE_TYPE_THIRD_PARTY_END    99
 #define DEVICE_TYPE_IIC_UNKNOWN       100
 #define DEVICE_TYPE_NXT_TEST          101  //!< Device is a NXT ADC test sensor
@@ -181,15 +189,18 @@ extern "C" {
 #define DEVICE_TYPE_NONE              126  //!< Port empty or not available
 #define DEVICE_TYPE_ERROR             127  //!< Port not empty and type is invalid
 
+#define MAX_DEVICE_TYPE 127         //!< Highest type number (positive)
 #define MAX_DEVICE_DATALENGTH 32
 #define MAX_DEVICE_MODES      8
-#define UART_DATA_LENGTH      MAX_DEVICE_DATALENGTH
-#define UART_BUFFER_SIZE      64
+#define MAX_DEVICE_TYPES      ((MAX_DEVICE_TYPE + 1) * MAX_DEVICE_MODES)//!< Max number of different device types and modes (max type data list size)
+
+//#define UART_DATA_LENGTH      MAX_DEVICE_DATALENGTH  // in uart.h
+//#define UART_BUFFER_SIZE      64
 #define TYPE_NAME_LENGTH      11
 #define SYMBOL_LENGTH         4
 #define DEVICE_LOGBUF_SIZE    300
-#define IIC_DATA_LENGTH       MAX_DEVICE_DATALENGTH
-#define IIC_NAME_LENGTH       8
+//#define IIC_DATA_LENGTH       MAX_DEVICE_DATALENGTH  // in iic.h
+//#define IIC_NAME_LENGTH       8
 
 // connection types
 #define CONN_UNKNOWN            111  //!< Connection is fake (test)
@@ -263,7 +274,7 @@ extern "C" {
 /** @} */  // end of ButtonModuleConstants group
 /** @} */  // end of ButtonModule group
 
-
+/*
 #define NXTCOLOR_IDX_RED    0 //!< Access the red value from color sensor value arrays
 #define NXTCOLOR_IDX_GREEN  1 //!< Access the green value from color sensor value arrays
 #define NXTCOLOR_IDX_BLUE   2 //!< Access the blue value from color sensor value arrays
@@ -281,6 +292,7 @@ extern "C" {
 #define INPUT_YELLOWCOLOR 4 //!< The color value is yellow
 #define INPUT_REDCOLOR    5 //!< The color value is red
 #define INPUT_WHITECOLOR  6 //!< The color value is white
+*/
 
 #define FILETYPE_UNKNOWN  0x00
 #define FILETYPE_FOLDER   0x01

@@ -32,6 +32,17 @@
 #ifndef EV3SENSOR_H
 #define EV3SENSOR_H
 
+//#include <fcntl.h>
+//#include <sys/mman.h>
+//#include <sys/ioctl.h>
+//#include <unistd.h>
+//#include "lms2012.h"
+#include "ev3_constants.h"
+#include "analog.h"
+#include "uart.h"
+#include "iic.h"
+
+
 /**
  * Initializes sensor I/O.
  */
@@ -57,6 +68,9 @@ void* ReadSensorData(int sensorPort);
  */
 int SetSensorMode(int sensorPort, int name);
 
+/**
+ * not ready
+ */
 int GetSensorMode(int sensorPort);
 
 /**
@@ -66,8 +80,6 @@ int GetSensorMode(int sensorPort);
  */
 int GetSensorType(int sensorPort);
 
-int wait_no_zero_status(int sensorPort);
-int clear_change(int sensorPort);
 
 /**
  * Reset the angle of the gyrosensor to 0 by changing modes back and forth

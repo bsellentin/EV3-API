@@ -17,12 +17,8 @@
  *  \verbatim
  */
 
-#define    UART_DATA_LENGTH		MAX_DEVICE_DATALENGTH
+#define    UART_DATA_LENGTH		MAX_DEVICE_DATALENGTH  // in ev3_constants
 #define    UART_BUFFER_SIZE		64
-
-#define   UART_PORT_CHANGED       0x01        //!< Input port changed
-#define   UART_DATA_READY         0x08        //!< Data is ready
-#define   UART_WRITE_REQUEST      0x10        //!< Write request
 
 typedef   struct
 {
@@ -42,6 +38,17 @@ typedef   struct
 }
 UART;
 
+/*\endverbatim
+ *
+ *  \n
+ */
+
+
+#define   UART_PORT_CHANGED       0x01        //!< Input port changed
+#define   UART_DATA_READY         0x08        //!< Data is ready
+#define   UART_WRITE_REQUEST      0x10        //!< Write request
+
+
 typedef   struct
 {
   TYPES   TypeData;
@@ -54,5 +61,6 @@ UARTCTL;
 #define   UART_READ_MODE_INFO     _IOWR('u',1,UARTCTL)
 #define   UART_NACK_MODE_INFO     _IOWR('u',2,UARTCTL)
 #define   UART_CLEAR_CHANGED      _IOWR('u',3,UARTCTL)
+
 
 #endif //UART_H_

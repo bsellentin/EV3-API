@@ -52,13 +52,13 @@ typedef struct
 
 typedef struct
 {
-  char  OutputTypes[NUM_OUTPUTS];
-  short Owners[NUM_OUTPUTS];
+  char  OutputTypes[OUTPUTS];
+  short Owners[OUTPUTS];
 
   int PwmFile;
   int MotorFile;
 
-  MOTORDATA MotorData[NUM_OUTPUTS];
+  MOTORDATA MotorData[OUTPUTS];
   MOTORDATA *pMotor;
 } OutputGlobals;
 
@@ -77,7 +77,7 @@ byte OutputToMotorNum(byte Output)
     case OUT_D:
       return 3;
   }
-  return NUM_OUTPUTS;
+  return OUTPUTS;
 }
 
 void DecodeOutputs(byte * outputs, byte * layer)
@@ -104,7 +104,7 @@ bool ResetOutputs(void)
 {
   // stop all the motors
   int i;
-  for (i=0; i < NUM_OUTPUTS; i++)
+  for (i=0; i < OUTPUTS; i++)
   {
     OutputInstance.Owners[i] = OWNER_NONE;
   }
@@ -275,7 +275,7 @@ bool OutputSetType(byte Output, char DeviceType)
   if (Layer == LAYER_MASTER)
   {
     Output = OutputToMotorNum(Output);
-    if (Output < NUM_OUTPUTS)
+    if (Output < OUTPUTS)
     {
       if (OutputInstance.OutputTypes[Output] != DeviceType)
       {
@@ -334,7 +334,7 @@ bool OutputSetTypes(char OutputA, char OutputB, char OutputC, char OutputD)
   if (result)
   {
     int i;
-    for (i = 0; i < NUM_OUTPUTS; i++)
+    for (i = 0; i < OUTPUTS; i++)
     {
       if (OutputInstance.OutputTypes[i] != cmd[i+1])
         OutputInstance.OutputTypes[i] = cmd[i+1];
@@ -502,7 +502,7 @@ bool OutputStartEx(byte Outputs, byte Owner)
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -615,7 +615,7 @@ bool OutputStepPowerEx(byte Outputs, char Power, int Step1, int Step2, int Step3
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -683,7 +683,7 @@ bool OutputTimePowerEx(byte Outputs, char Power, int Time1, int Time2, int Time3
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -747,7 +747,7 @@ bool OutputStepSpeedEx(byte Outputs, char Speed, int Step1, int Step2, int Step3
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -816,7 +816,7 @@ bool OutputTimeSpeedEx(byte Outputs, char Speed, int Time1, int Time2, int Time3
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -885,7 +885,7 @@ bool OutputStepSyncEx(byte Outputs, char Speed, short Turn, int Step, bool useBr
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -951,7 +951,7 @@ bool OutputTimeSyncEx(byte Outputs, char Speed, short Turn, int Time, bool useBr
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.Owners[i] = Owner;
@@ -1007,7 +1007,7 @@ bool OutputRead(byte Output, char * Speed, int * TachoCount, int * TachoSensor)
   if (Layer == LAYER_MASTER)
   {
     Output = OutputToMotorNum(Output);
-    if (Output < NUM_OUTPUTS)
+    if (Output < OUTPUTS)
     {
       *Speed = OutputInstance.pMotor[Output].Speed;
       *TachoCount = OutputInstance.pMotor[Output].TachoCounts;
@@ -1049,7 +1049,7 @@ bool OutputReady(byte Outputs, byte * Busy, byte Owner)
 
       int Tmp;
 
-      for (Tmp = 0; Tmp < NUM_OUTPUTS - 1; Tmp++)
+      for (Tmp = 0; Tmp < OUTPUTS - 1; Tmp++)
 
       {
 
@@ -1192,7 +1192,7 @@ bool OutputClearCount(byte Outputs)
     if (result)
     {
       int i;
-      for (i = 0; i < NUM_OUTPUTS; i++)
+      for (i = 0; i < OUTPUTS; i++)
       {
         if (Outputs & (0x01 << i))
           OutputInstance.pMotor[i].TachoSensor = 0;

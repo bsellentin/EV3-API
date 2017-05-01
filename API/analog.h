@@ -2,6 +2,9 @@
 #ifndef ANALOG_H_
 #define ANALOG_H_
 
+#include "basictypes.h"
+#include "typedata.h"
+
 /*! \page NxtColorMemory
  *
  *  <b>     Shared Memory </b>
@@ -59,8 +62,6 @@ COLORSTRUCT;
  *  \verbatim
  */
 
-#define   ANALOG_DEVICE         "lms_analog"          //!< ANALOG device name
-#define   ANALOG_DEVICE_NAME    "/dev/lms_analog"     //!< ANALOG device file name
 
 typedef   struct
 {
