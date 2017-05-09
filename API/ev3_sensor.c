@@ -42,13 +42,15 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <time.h>
+#include <stdint.h>
 //#include "lms2012.h"
 //#include "uart.h"
 //#include "iic.h"
 //#include "analog.h"
 #include "ev3_sensor.h"
 
-#include <stdint.h>
+
 
 /***********************************/
 // see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list p.100ff
@@ -57,7 +59,7 @@
  */
  
 // EV3-TOUCH
-//#define TOUCH_TYPE 16
+//#define TOUCH_TYPE 16             // in ev3_constants: reserved device types
 #define TOUCH_PRESS_MODE 0          // Press
 #define TOUCH_BUMP_MODE 1           // count
 
@@ -124,6 +126,7 @@
 
 int wait_no_zero_status(int sensorPort);
 int clear_change(int sensorPort);
+int reset_nxt_iic_device(int sensorPort);
 
 void      cInputCalcFullScale(UWORD *pRawVal, UWORD ZeroPointOffset, UBYTE PctFullScale, UBYTE InvStatus);
 void      cInputCalibrateColor(COLORSTRUCT *pC, UWORD *pNewVals);
@@ -144,6 +147,7 @@ char buf[4];
 
 int sensor_setup_NAME[INPUTS];
 int ir_sensor_channel[INPUTS];
+
 
 /******************************************************************************/
 /**
@@ -542,7 +546,8 @@ int GetSensorMode(int sensorPort)
     ioctl(g_uartFile, UART_READ_MODE_INFO, &uartCtrl);
     mode = uartCtrl.TypeData.Mode;
 
-    return devCon.Mode[sensorPort];
+    //return devCon.Mode[sensorPort];
+    return mode;
 }
 int GetSensorType(int sensorPort)
 {
@@ -613,7 +618,9 @@ int SetSensorMode(int sensorPort, int name)
     int status;
     int i;
     int pins;
-
+    DATA8 connection, type, mode;
+    //IICDAT iicTmpDat;
+    
 	if (!g_analogSensors || sensorPort < 0 || sensorPort >= INPUTS)
 		return -1;
 
@@ -625,92 +632,92 @@ int SetSensorMode(int sensorPort, int name)
 			break;
 		// EV3-Touchsensor
 		case TOUCH:
-			devCon.Connection[sensorPort]	= CONN_INPUT_DUMB;        // in ev3_constants.h
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_TOUCH;  // also
-			devCon.Mode[sensorPort] 		= TOUCH_PRESS_MODE;       // here on top
+			connection   = CONN_INPUT_DUMB;        // in ev3_constants.h
+			type         = DEVICE_TYPE_EV3_TOUCH;  // also
+			mode         = TOUCH_PRESS_MODE;       // here on top
 			pins = 0x46;
 			break;
 		case BUMPS:
-		    devCon.Connection[sensorPort]	= CONN_INPUT_DUMB;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_TOUCH;
-			devCon.Mode[sensorPort] 		= TOUCH_BUMP_MODE;
+		    connection   = CONN_INPUT_DUMB;
+			type         = DEVICE_TYPE_EV3_TOUCH;
+			mode         = TOUCH_BUMP_MODE;
 			pins = 0x46;
 			break;
 		// EV3-Lightsensor
 		case COL_REFLECT:
-			devCon.Connection[sensorPort]	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_COL;
-			devCon.Mode[sensorPort] 		= COL_REFLECT_MODE;
+			connection   = CONN_INPUT_UART;
+			type         = DEVICE_TYPE_EV3_COL;
+			mode         = COL_REFLECT_MODE;
 			pins = 0x2D;
 			break;
 		case COL_AMBIENT:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_COL;
-			devCon.Mode[sensorPort] 		= COL_AMBIENT_MODE;
+			connection   = CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_COL;
+			mode 		= COL_AMBIENT_MODE;
 			pins = 0x2D;
 			break;
 		case COL_COLOR:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_COL;
-			devCon.Mode[sensorPort] 		= COL_COLOR_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_COL;
+			mode 		= COL_COLOR_MODE;
 			pins = 0x2D;
 			break;
 		// EV3-Ultrasonic
 		case US_DIST_CM:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_US;
-			devCon.Mode[sensorPort] 		= US_DIST_CM_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_US;
+			mode 		= US_DIST_CM_MODE;
 			pins = 0x2D;
 			break;
 		case US_DIST_MM:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_US;
-			devCon.Mode[sensorPort] 		= US_DIST_MM_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_US;
+			mode 		= US_DIST_MM_MODE;
 			pins = 0x2D;
 			break;
 		case US_DIST_IN:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_US;
-			devCon.Mode[sensorPort] 		= US_DIST_IN_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_US;
+			mode 		= US_DIST_IN_MODE;
 			pins = 0x2D;
 			break;
 	    // EV3-Gyroskop
 		case GYRO_ANG:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
-			devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_GYRO;
+			mode 		= GYRO_ANG_MODE;
 			pins = 0x2D;
 			break;
 		case GYRO_RATE:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
-			devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_GYRO;
+			mode 		= GYRO_RATE_MODE;
 			pins = 0x2D;
 			break;
 		// EV3-Infrared
 		case IR_PROX:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_IR;
-			devCon.Mode[sensorPort] 		= IR_PROX_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_IR;
+			mode 		= IR_PROX_MODE;
 			pins = 0x2D;
 			break;
 		case IR_SEEK:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_IR;
-			devCon.Mode[sensorPort] 		= IR_SEEK_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_IR;
+			mode 		= IR_SEEK_MODE;
 			pins = 0x2D;
 			break;
 		case IR_REMOTE:
-			devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_IR;
-			devCon.Mode[sensorPort] 		= IR_REMOTE_MODE;
+			connection 	= CONN_INPUT_UART;
+			type 		= DEVICE_TYPE_EV3_IR;
+			mode 		= IR_REMOTE_MODE;
 			pins = 0x2D;
 			break;
 		// NXT
 		case NXT_IR_SEEKER:
-			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_IIC;
-			devCon.Mode[sensorPort] 		= IIC_BYTE_MODE;
+			connection 	= CONN_NXT_IIC;
+			type 		= DEVICE_TYPE_NXT_IIC;
+			mode 		= IIC_BYTE_MODE;
 			pins = 0x46;
 			iicDat.Port = sensorPort;
 		    iicDat.Time = 0;
@@ -721,9 +728,9 @@ int SetSensorMode(int sensorPort, int name)
 		    iicDat.WrData[1] = 0x42;        // register to read
 			break;
 		case NXT_TEMP_C:
-			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_TEMP;
-			devCon.Mode[sensorPort] 		= NXT_TEMP_C_MODE;
+			connection 	= CONN_NXT_IIC;
+			type 		= DEVICE_TYPE_NXT_TEMP;
+			mode 		= NXT_TEMP_C_MODE;
 			pins = 0x46;
 			iicDat.Port = sensorPort;
 		    iicDat.Time = 300;
@@ -734,9 +741,9 @@ int SetSensorMode(int sensorPort, int name)
 		    iicDat.WrData[1] = 0x00;        // register to read
 			break;
 		case NXT_TEMP_F:
-			devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_TEMP;
-			devCon.Mode[sensorPort] 		= NXT_TEMP_F_MODE;
+			connection 	= CONN_NXT_IIC;
+			type 		= DEVICE_TYPE_NXT_TEMP;
+			mode 		= NXT_TEMP_F_MODE;
 			pins = 0x46;
 			iicDat.Port = sensorPort;
 		    iicDat.Time = 300;
@@ -747,57 +754,70 @@ int SetSensorMode(int sensorPort, int name)
 		    iicDat.WrData[1] = 0x00;        // register to read
 			break;
 		case NXT_SND_DB:
-	        devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_SOUND;
-			devCon.Mode[sensorPort] 		= NXT_SND_DB_MODE;
+	        connection 	= CONN_NXT_DUMB;
+			type 		= DEVICE_TYPE_NXT_SOUND;
+			mode 		= NXT_SND_DB_MODE;
 			pins = 0x30;
 			break;
 	    case NXT_SND_DBA:
-	        devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_SOUND;
-			devCon.Mode[sensorPort] 		= NXT_SND_DBA_MODE;
+	        connection 	= CONN_NXT_DUMB;
+			type 		= DEVICE_TYPE_NXT_SOUND;
+			mode 		= NXT_SND_DBA_MODE;
 			pins = 0x32;
 			break;
 		case NXT_TOUCH:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_TOUCH;
-		    devCon.Mode[sensorPort] 		= NXT_TOUCH_MODE;
+		    connection 	= CONN_NXT_DUMB;
+		    type 		= DEVICE_TYPE_NXT_TOUCH;
+		    mode 		= NXT_TOUCH_MODE;
 		    pins = 0x46;
 		    break;
 		case NXT_REFLECT:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_LIGHT;
-		    devCon.Mode[sensorPort] 		= NXT_LIGHT_REFLECTED_MODE;
+		    connection 	= CONN_NXT_DUMB;
+		    type 		= DEVICE_TYPE_NXT_LIGHT;
+		    mode 		= NXT_LIGHT_REFLECTED_MODE;
 		    pins = 0x32;
 		    break;
 		case NXT_AMBIENT:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_LIGHT;
-		    devCon.Mode[sensorPort] 		= NXT_LIGHT_AMBIENT_MODE;
+		    connection 	= CONN_NXT_DUMB;
+		    type 		= DEVICE_TYPE_NXT_LIGHT;
+		    mode 		= NXT_LIGHT_AMBIENT_MODE;
 		    pins = 0x30;
 		    break;
 		case NXT_COL_REFLECTED_MODE:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_COLOR;
-		    devCon.Mode[sensorPort] 		= NXT_COL_REFLECTED_MODE;
+#ifndef DISABLE_OLD_COLOR
+            connection 	= CONN_NXT_COLOR;
+#else
+            connection 	= CONN_NXT_DUMB;
+#endif
+		    type 		= DEVICE_TYPE_NXT_COLOR;
+		    mode 		= NXT_COL_REFLECTED_MODE;
 		    pins = 0x0E;
 		    break;
 		case NXT_COL_AMB:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_COLOR;
-		    devCon.Mode[sensorPort] 		= NXT_COL_AMBIENT_MODE;
+#ifndef DISABLE_OLD_COLOR
+            connection 	= CONN_NXT_COLOR;
+#else
+            connection 	= CONN_NXT_DUMB;
+#endif
+		    type 		= DEVICE_TYPE_NXT_COLOR;
+		    mode 		= NXT_COL_AMBIENT_MODE;
 		    pins = 0x11;
 		    break;
 		case NXT_COL_COL:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_DUMB;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_COLOR;
-		    devCon.Mode[sensorPort] 		= NXT_COL_COLOR_MODE;
+#ifndef DISABLE_OLD_COLOR
+            connection 	= CONN_NXT_COLOR;
+#else
+            connection 	= CONN_NXT_DUMB;
+#endif
+		    type 		= DEVICE_TYPE_NXT_COLOR;
+		    mode 		= NXT_COL_COLOR_MODE;
 		    pins = 0x0D;
 		    break;
+
 		case NXT_US_CM:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_US;
-		    devCon.Mode[sensorPort] 		= NXT_US_CM_MODE;
+		    connection 	= CONN_NXT_IIC;
+		    type 		= DEVICE_TYPE_NXT_US;
+		    mode 		= NXT_US_CM_MODE;
 		    pins = 0x31;
 		    iicDat.Port = sensorPort;
 		    iicDat.Time = 300;
@@ -808,9 +828,9 @@ int SetSensorMode(int sensorPort, int name)
 		    iicDat.WrData[1] = 0x42;        // register to read
 		    break;
 		case NXT_US_IN:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-		    devCon.Type[sensorPort] 		= DEVICE_TYPE_NXT_US;
-		    devCon.Mode[sensorPort] 		= NXT_US_CM_MODE;
+		    connection 	= CONN_NXT_IIC;
+		    type 		= DEVICE_TYPE_NXT_US;
+		    mode 		= NXT_US_CM_MODE;
 		    pins = 0x31;
 		    iicDat.Port = sensorPort;
 		    iicDat.Time = 300;
@@ -822,29 +842,29 @@ int SetSensorMode(int sensorPort, int name)
 		    break;
 		// HiTechnic Infrared Seeker
 		case HT_DIR_DC:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-		    devCon.Type[sensorPort]         = DEVICE_TYPE_HT_DIR;
-		    devCon.Mode[sensorPort]         = HT_DIR_DC_MODE;
+		    connection 	= CONN_NXT_IIC;
+		    type         = DEVICE_TYPE_HT_DIR;
+		    mode         = HT_DIR_DC_MODE;
 		    pins = 0x46;
 		    iicDat.Port = sensorPort;
 		    iicDat.Time = 100;
 		    iicDat.Repeat = 0;
 		    iicDat.RdLng = 1;               // Direction data = 1 byte
 		    iicDat.WrLng = 2;
-		    iicDat.WrData[0] = 0x10;        // I2C address
+		    iicDat.WrData[0] = 0x08;        // I2C address
 		    iicDat.WrData[1] = 0x42;        // register to read
 		    break;
 		case HT_DIR_AC:
-		    devCon.Connection[sensorPort] 	= CONN_NXT_IIC;
-		    devCon.Type[sensorPort]         = DEVICE_TYPE_HT_DIR;
-		    devCon.Mode[sensorPort]         = HT_DIR_DC_MODE;
+		    connection 	= CONN_NXT_IIC;
+		    type         = DEVICE_TYPE_HT_DIR;
+		    mode         = HT_DIR_AC_MODE;
 		    pins = 0x46;
 		    iicDat.Port = sensorPort;
 		    iicDat.Time = 100;
 		    iicDat.Repeat = 0;
 		    iicDat.RdLng = 1;               // Direction data = 1 byte
 		    iicDat.WrLng = 2;
-		    iicDat.WrData[0] = 0x10;        // I2C address
+		    iicDat.WrData[0] = 0x08;        // I2C address
 		    iicDat.WrData[1] = 0x49;        // register to read
 		    break;
 		default: return -1;
@@ -853,48 +873,97 @@ int SetSensorMode(int sensorPort, int name)
 	g_analogSensors->Updated[sensorPort]    =  0;
 	buf[sensorPort] = pins;
     // write setup string to "Device Connection Manager" driver
-    write(dcmFile, buf, 4); // necessary for analog devices
-	
-	if (devCon.Connection[sensorPort] == CONN_INPUT_UART){
-	    g_uartSensors->Status[sensorPort]      &= ~UART_DATA_READY;
-	
-        UARTCTL uartCtrl;
-        uartCtrl.Port = sensorPort;
-        uartCtrl.Mode = devCon.Mode[sensorPort];
-	    // write setup string to "UART Device Controller" driver
-        ioctl(g_uartFile, UART_SET_CONN, &devCon);
-        
-	    status = wait_no_zero_status(sensorPort);
-	    if (status & UART_PORT_CHANGED){
-	        // Clear the port changed flag for the current port.
-	        ioctl(g_uartFile, UART_CLEAR_CHANGED, &uartCtrl);
-	        g_uartSensors->Status[sensorPort] &= ~UART_PORT_CHANGED;
-	    }
-	}
+    write(dcmFile, buf, 4);
+    nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
 
-	if(devCon.Connection[sensorPort] == CONN_NXT_IIC){
-	    g_iicSensors->Status[sensorPort] &= ~IIC_DATA_READY;
-	    
-	    IICCTL iicCtrl;
-	    iicCtrl.Port = sensorPort;
-	    iicCtrl.Mode = devCon.Mode[sensorPort];
-	    ioctl(g_iicFile, IIC_SET_CONN, &devCon);
-	    
-	    /*int i, status;
-	    for(i=0;i<50;i++){
-	        status = g_iicSensors->Status[sensorPort];
-	        if(status != 0){
-	            break;
+    switch (connection){
+        case CONN_INPUT_UART:
+            g_uartSensors->Status[sensorPort]      &= ~UART_DATA_READY;
+
+            devCon.Connection[sensorPort]   = connection;
+            devCon.Type[sensorPort]         = type;
+            devCon.Mode[sensorPort]         = mode;
+
+            UARTCTL uartCtrl;
+            uartCtrl.Port = sensorPort;
+            uartCtrl.Mode = devCon.Mode[sensorPort];
+	        // write setup string to "UART Device Controller" driver
+            ioctl(g_uartFile, UART_SET_CONN, &devCon);
+            
+	        status = wait_no_zero_status(sensorPort);
+	        if (status & UART_PORT_CHANGED){
+	            // Clear the port changed flag for the current port.
+	            ioctl(g_uartFile, UART_CLEAR_CHANGED, &uartCtrl);
+	            g_uartSensors->Status[sensorPort] &= ~UART_PORT_CHANGED;
 	        }
-	        sleep(0.1);
-	    }
-	    if(status && IIC_PORT_CHANGED){
-	    
-	    }*/
-	}
+	        break;
+	    case CONN_NXT_IIC:
+	        //g_iicSensors->Status[sensorPort] &= ~IIC_DATA_READY;
+	        
+	        // mode 0 is default, should be managed by DCM, if not TYPE_UNKNOWN
+	        if(mode != 0){
+	            reset_nxt_iic_device(sensorPort);
+	        }
+	        
+	        devCon.Connection[sensorPort] = connection;
+	        devCon.Type[sensorPort] = type;
+	        devCon.Mode[sensorPort] = mode;
+	        
+	        IICCTL iicCtrl;
+	        iicCtrl.Port = sensorPort;
+	        iicCtrl.Mode = devCon.Mode[sensorPort];
+	        ioctl(g_iicFile, IIC_SET_CONN, &devCon);
 
-	return 0;
+/*
+ * typedef   struct
+ * {
+ *   RESULT  Result;
+ *   DATA8   Port;
+ *   DATA8   Repeat;
+ *   DATA16  Time;
+ *   DATA8   WrLng;
+ *   DATA8   WrData[IIC_DATA_LENGTH];
+ *   DATA8   RdLng;
+ *   DATA8   RdData[IIC_DATA_LENGTH];
+ * }
+ * IICDAT;
+ *\n  Generic setup/read IIC sensors \ref cinputdevicesetup "Example"\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   REPEAT       - Repeat setup/read "REPEAT" times  (0 = infinite)
+ *    -  \param  (DATA16)  TIME         - Time between repeats [10..1000mS] (0 = 10)
+ *    -  \param  (DATA8)   WRLNG        - No of bytes to write
+ *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read
+ *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
+ */
+
+            if(mode != 0){
+                /*
+                iicDat.Port = sensorPort;
+                iicDat.Result = -1;
+                iicDat.Time = time;
+                iicDat.Repeat = repeat;
+                iicDat.RdLng = rdLng;
+                iicDat.WrLng = wrLng;
+                iicDat.WrData[0] = iicAdr;
+                iicDat.WrData[1] = rdReg;
+                */
+                while (iicDat.Result){
+                    ioctl(g_iicFile, IIC_SETUP, &iicDat);
+                }
+            }
+            break;
+
+        default:
+            devCon.Connection[sensorPort] = connection;
+            devCon.Type[sensorPort] = type;
+            devCon.Mode[sensorPort] = mode;
+    }
+
+    return 0;
 }
+
 
 int wait_no_zero_status(int sensorPort)
 {
@@ -920,12 +989,30 @@ int clear_change(int sensorPort)
         if ((status & UART_DATA_READY != 0) && (status & UART_PORT_CHANGED) == 0){
             break;
         }
-        devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-		devCon.Type[sensorPort] 		= 0;
-		devCon.Mode[sensorPort] 		= 0;
-		ioctl(g_uartFile, UART_CLEAR_CHANGED, &devCon);
-		sleep(0.1);
+        devCon.Connection[sensorPort]   = CONN_INPUT_UART;
+        devCon.Type[sensorPort]         = 0;
+        devCon.Mode[sensorPort]         = 0;
+        ioctl(g_uartFile, UART_CLEAR_CHANGED, &devCon);
+        sleep(0.1);
     }
+}
+
+int reset_nxt_iic_device(int sensorPort)
+{
+    devCon.Connection[sensorPort]   = CONN_NONE;
+    devCon.Type[sensorPort]         = 0;
+    devCon.Mode[sensorPort]         = 0;
+    ioctl(g_iicFile,IIC_SET_CONN, &devCon);
+    nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+    
+    devCon.Connection[sensorPort]   = CONN_NXT_IIC;
+    devCon.Type[sensorPort]         = DEVICE_TYPE_IIC_UNKNOWN;
+    devCon.Mode[sensorPort]         = 255;
+    ioctl(g_iicFile,IIC_SET_CONN, &devCon);
+    nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+
+    ioctl(g_iicFile,IIC_SET_CONN, &devCon);
+    nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
 }
 
 /** Reset the angle of the gyrosensor to 0 by changing modes back and forth
