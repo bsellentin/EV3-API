@@ -108,23 +108,28 @@ int SetIRBeaconCH(int sensorPort, int channel);
  * \brief Identifiers of sensor names
  *   = sensor type + sensor mode
  */
-#define NO_SEN -1		    // No sensor connected
+#define SENSOR_1 ReadSensor(IN_1)
+#define SENSOR_2 ReadSensor(IN_2)
+#define SENSOR_3 ReadSensor(IN_3)
+#define SENSOR_4 ReadSensor(IN_4)
+ 
+#define NO_SEN -1           // No sensor connected
 //Touchsenor
-#define TOUCH 1	            // Press
+#define TOUCH 1             // Press
 #define BUMPS 2             // Count
 #define SetSensorTouch(_in) SetSensorMode((_in), TOUCH)
 
 //Lightsensor
-#define COL_REFLECT 3	    // Reflect
-#define COL_AMBIENT 4	    // Ambient
-#define COL_COLOR 5		    // Color
+#define COL_REFLECT 3       // Reflect
+#define COL_AMBIENT 4       // Ambient
+#define COL_COLOR 5         // Color
 #define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
 #define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
 
 //Ultrasonic
-#define US_DIST_CM 6	    // Dist in cm
-#define US_DIST_MM 7	    // Dist in mm
-#define US_DIST_IN 8	    // Dist in inch
+#define US_DIST_CM 6        // Dist in cm
+#define US_DIST_MM 7        // Dist in mm
+#define US_DIST_IN 8        // Dist in inch
 #define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
 
 //Gyroskop
