@@ -51,7 +51,7 @@ ButtonLedGlobals ButtonLedInstance;
 
 char HwVers[HWVERS_SIZE];
 
-int WriteToButtonLedDevice(char * bytes, int num_bytes)
+int WriteToButtonLedDevice(unsigned char* bytes, int num_bytes)
 {
   int result = -1;
   if (ButtonLedInstance.ButtonLedFile >= 0)
@@ -219,7 +219,7 @@ float HardwareVersion()
   return Result;
 }
 
-char* HardwareVersionString()
+const char* HardwareVersionString()
 {
   if (!ButtonLedInitialized())
     return "";

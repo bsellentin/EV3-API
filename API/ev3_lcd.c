@@ -531,7 +531,7 @@ void dLcdDrawChar(byte *pImage, char Color, short X0, short Y0, char Font, char 
   }
 }
 
-void dLcdDrawText(byte *pImage, char Color, short X0, short Y0, char Font, char *pText)
+void dLcdDrawText(byte *pImage, char Color, short X0, short Y0, char Font, char const *pText)
 {
   while (*pText)
   {
@@ -931,7 +931,7 @@ void LcdWriteFrameBufferToFile(char* filename, ImageFormat fmt)
   _lcdWriteBytesToFile(fmt, pSrc, filename, 178, 128);
 }
 
-bool LcdText(char Color, short X, short Y, char* Text)
+bool LcdText(char Color, short X, short Y, char const* Text)
 {
   if (!LcdInitialized())
     return false;
@@ -1762,7 +1762,12 @@ int vasprintf(char **buf, const char *fmt, va_list _va)
 
 	if (len < 0) return len;
 
-	*buf = malloc(len + 1);
+    #ifdef __cplusplus
+    *buf = (char*)malloc(len + 1);
+    #else
+    *buf = malloc(len + 1);
+    #endif
+	
 	if (!*buf)
 		return -1; /* out of memory */
 

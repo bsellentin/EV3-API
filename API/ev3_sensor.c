@@ -75,6 +75,7 @@
 #define US_DIST_CM_MODE 0           // Dist in cm
 #define US_DIST_MM_MODE 0           // Dist in mm
 #define US_DIST_IN_MODE 1           // Dist in inch
+#define US_LISTEN_MODE 2            // are other ultrasonic signals
 
 // Gyroskop
 //#define GYRO_TYPE 32
@@ -207,6 +208,14 @@ int InitSensors()
     return -1;
 }
 
+// function returns pointer
+void* readIicSensorRaw(int sensorPort){
+    //#ifndef DISABLE_FAST_DATALOG_BUFFER
+    //    return g_iicSensors->Raw[sensorPort][g_iicSensors->Raw[sensorPort][DEVICE_LOGBUF_SIZE][IIC_DATA_LENGTH]];
+    //#else
+        return g_iicSensors->Raw[sensorPort][g_iicSensors->Actual[sensorPort]];
+    //#endif
+}
 
 /********************************************************************************************/
 /**
@@ -227,28 +236,26 @@ void* readIicSensor(int sensorPort)
 {
 	if (!g_iicSensors)
 		return 0;
-    UWORD currentSensorSlot = g_iicSensors->Actual[sensorPort];
+    unsigned short currentSensorSlot = g_iicSensors->Actual[sensorPort];
     //(unsigned char)pIic->Raw[IIC_PORT][pIic->Actual[IIC_PORT]][0]
     return g_iicSensors->Raw[sensorPort][currentSensorSlot];
 }
 
 void* readNewDumbSensor(int sensorPort)
 {
-	return (void*)&(g_analogSensors->InPin6[sensorPort]);
+    return (void*)&(g_analogSensors->InPin6[sensorPort]);        // DATA16
 }
 
 void* readOldDumbSensor(int sensorPort)
 {
-	return (void*)&(g_analogSensors->InPin1[sensorPort]);       // DATA16
+    return (void*)&(g_analogSensors->InPin1[sensorPort]);       // DATA16
 }
 
-
-
-uint32_t readNxtColor(int sensorPort)
+int32_t readNxtColor(int sensorPort)
 {
-    uint32_t color = 0;
+    int32_t color = 0;
     cInputCalibrateColor(&g_analogSensors->NxtCol[sensorPort], g_analogSensors->NxtCol[sensorPort].SensorRaw);
-    color = (uint32_t)cInputCalculateColor(&g_analogSensors->NxtCol[sensorPort]);
+    color = (int32_t)cInputCalculateColor(&g_analogSensors->NxtCol[sensorPort]);
     return color;
 }
 
@@ -298,6 +305,8 @@ void* ReadSensorData(int sensorPort)
             return readUartSensor(sensorPort);
         case US_DIST_IN: 
             return readUartSensor(sensorPort);
+        case US_LISTEN:
+            return readUartSensor(sensorPort);
         // EV3 Gyroskop
         case GYRO_ANG: 
             return readUartSensor(sensorPort);
@@ -344,6 +353,10 @@ void* ReadSensorData(int sensorPort)
             return readIicSensor(sensorPort);
         case HT_DIR_AC:
             return readIicSensor(sensorPort);
+        case HT_DIR_DCALL:
+            return readIicSensor(sensorPort);
+        case HT_DIR_ACALL:
+            return readIicSensor(sensorPort);
         default: return 0;
     }
 
@@ -369,11 +382,13 @@ void* ReadSensorData(int sensorPort)
 */
 int ReadSensor(int sensorPort)
 {
-    uint64_t* data = ReadSensorData(sensorPort);
+    uint64_t* data = (uint64_t*)ReadSensorData(sensorPort);
 
     int32_t help=0;
     int32_t value = 0;
-
+    unsigned char onebyte=0;
+    float dist;
+    
     if (!data)
         return -1;
 
@@ -383,27 +398,32 @@ int ReadSensor(int sensorPort)
             return -1;
         // Touchsensor
         case TOUCH:
+            // format 1 = 16 bit
             value = *((DATA16*)data);
             help = (value > 250) ? 1 : 0;
             return help;
         case BUMPS:
-        // mentionned in ev3 firmware docs, but not used in EV-G, lejos, ev3-dev, ...
+            // format 2 = 32 bit
+            // mentionned in ev3 firmware docs, but not used in EV-G, lejos, ev3-dev, ...
             help = *((DATA16*)data);
             //help = help/256;
             return help;
         // Lightsensor
         case COL_REFLECT:
             /* 
+             *  format 0 = 8 bit
              *  RawMax = 100, RawMin = 0
              */
             return *((DATA16*)data)&0x00FF;
         case COL_AMBIENT:
             /* 
+             *  format 0
              *  RawMax = 100, RawMin = 0
              */
             return *((DATA16*)data)&0x00FF;
         case COL_COLOR:
-            /* RawMax = 8, RawMin = 0
+            /* format 0
+             * RawMax = 8, RawMin = 0
              * NONE = 0, BLACK = 1, BLUE  = 2, GREEN = 3, YELLOW = 4,
              * RED  = 5, WHITE = 6, BROWN = 7
              */
@@ -411,18 +431,33 @@ int ReadSensor(int sensorPort)
         // Ultrasonic
         case US_DIST_CM:
             /* 
+             *  format 1
              *  RawMax = 2550, RawMin = 0
              */
             return (*((DATA16*)data)&0x0FFF)/10;
         case US_DIST_MM:
+            /*
+             *  format 1
+             *  RawMax = 2550, RawMin = 0
+             */
             return *((DATA16*)data)&0x0FFF;
         case US_DIST_IN:
             /* 
              *  RawMax = 1000, RawMin = 0
              */
             return *((DATA16*)data)&0x0FFF;
+        case US_LISTEN:
+            /*
+             *  format 0
+             *  RawMax = 1, RawMin = 0
+             */
+             return *((DATA16*)data)&0x000F;
         // Gyroskop
         case GYRO_ANG:
+            /*
+             *  format1
+             *  RawMin = -180.0, RawMax = 180.0
+             */
             help = *((DATA16*)data)&0xFFFF;         // 1111 1111 1111 1111
             if(help & 0x8000)                       // 1000 0000 0000 0000
             {
@@ -430,6 +465,10 @@ int ReadSensor(int sensorPort)
             }
             return help;
         case GYRO_RATE:
+            /*
+             *  format 1
+             *  RawMin = -440.0, RawMax = 440.0
+             */
             help = *(data)&0xFFFF;
             if(help & 0x8000)
             {
@@ -438,8 +477,16 @@ int ReadSensor(int sensorPort)
         return help;
         // Infrared
         case IR_PROX:
+            /*
+             *  format 0
+             *  RawMin = 0, RawMax = 100
+             */
             return *((DATA16*)data)&0x00FF;
         case IR_SEEK:
+            /*
+             *  8 Datasets format 0
+             *  RawMin = -100, RawMAx = 100
+             */
             help = (*(data) >> (16*ir_sensor_channel[sensorPort]))& 0xFF;
             if(help & 0x80)
             {
@@ -447,6 +494,10 @@ int ReadSensor(int sensorPort)
             }
             return help;
         case IR_REMOTE:
+            /*
+             *  4 datasets format 0
+             *  RawMin = 0, RawMax = 10
+             */
             help = *(data)&0xFFFFFFFF;
             help = (help >> (8*ir_sensor_channel[sensorPort]))& 0xFF;
             return help;
@@ -471,72 +522,139 @@ int ReadSensor(int sensorPort)
             return (((help>>4) & 0xFF)*10 + ((help & 0xF) * 10 / 15)) * 9/5 + 320;
             case NXT_SND_DB:
             /* 
+             *  format 1
              *  RawMax = 0, RawMin = 4095
              */ 
             help = *((DATA16*)data)&0x0FFF;
             return (100 - (help * 100/4095));
         case NXT_SND_DBA:
             /* 
+             *  format 1
              *  RawMax = 0, RawMin = 4095
              */ 
             help = *((DATA16*)data)&0x0FFF;
             return (100 - (help * 100/4095));
         case NXT_TOUCH:
+            /*
+             *  format 1
+             */
             value = *((DATA16*)data);
             help = (value < 3800) ? 1 : 0;
             return help;
         case NXT_REFLECT:
             /*
-             * RawMax = 445, RawMin = 3372
+             *  format 1
+             *  RawMax = 445, RawMin = 3372
              */
             value = *((DATA16*)data);
             help = (3372-value)*100/(3372-445);
             return help;
         case NXT_AMBIENT:
             /*
-             * RawMax = 663, RawMin = 3411
+             *  format 1
+             *  RawMax = 663, RawMin = 3411
              */
             value = *((DATA16*)data);
             help = (3411-value)*100/(3411-663);
             return help;
         case NXT_COL_REF:
             /*
-             * RawMax = 1500, RawMin = 200
-             * RawMax seems to less
+             *  format 2
+             *  RawMax = 1500, RawMin = 200
+             *  RawMax seems to less
              */
             value = *((DATA16*)data);
             help = 100 - (1800-value)*100/(1800-200);
             return help;
         case NXT_COL_AMB:
             /*
-             * RawMax = 2900, RawMin = 200
+             *  format 2
+             *  RawMax = 2900, RawMin = 200
              */
             value = *((DATA16*)data);
             help = 100 - (2900-value)*100/(2900-200);
             return help;
         case NXT_COL_COL:
+            /*
+             *  format 0
+             *  RawMin 0, RawMax = 8
+             */
             return readNxtColor(sensorPort);
         case NXT_US_CM:
             /*
+             * format 1
              * RawMax = 255, RawMin = 0
              * SiMax = 255, SiMin = 0
              */
-            return *((DATA16*)data);
+            //value = *((DATA16*)readIicSensorRaw(sensorPort));
+            onebyte = (unsigned char)g_iicSensors->Raw[sensorPort][g_iicSensors->Actual[sensorPort]][0];
+            return onebyte;
+            //return value;
+            //return *((DATA16*)data);
         case NXT_US_IN:
             /*
+             * format 1
              * RawMax = 255, RawMin = 0
              * SiMax = 100, SiMin = 0
              */
             return *((DATA16*)data);
         case HT_DIR_DC:
+            /*
+             *  format 0
+             *  RawMin = 0, RawMax = 9
+             */
             return *((DATA16*)data)&0x000F;
         case HT_DIR_AC:
+            /*
+             *  format 0
+             *  RawMin = 0, RawMax = 9
+             */
             return *((DATA16*)data)&0x000F;
+        case HT_DIR_DCALL:
+            /*
+             *  7 datasets format 0
+             */
+            return *data;
+        case HT_DIR_ACALL:
+            /*
+             *  6 datasets format 0
+             */
+            return *data;
         default: break;
     }
     return *((DATA16*)data);
 }
 
+void ReadSensorHTIRSeeker2AC(int sensorPort, int *dir, int *s1, int *s2, int *s3, int *s4, int *s5)
+{
+    //char respBuf =[5];
+    signed char* respBuf = readIicSensorRaw(sensorPort);
+    *s5 = respBuf[0];
+    *s4 = respBuf[1];
+    *s3 = respBuf[2];
+    *s2 = respBuf[3];
+    *s1 = respBuf[4];
+    *dir = respBuf[5];
+}
+
+/* from monobrick sensor.cs
+protected void GetTypeAndMode(out SensorType type, out SensorMode mode){
+				if(!isInitialized)
+					Initialize();
+				var command = new Command(2,0,200,true);
+				command.Append(ByteCodes.InputDevice);          opINPUT_DEVICE   0x99
+				command.Append(InputSubCodes.GetTypeMode);      cmd:GET_TYPEMODE 0x05
+				command.Append(this.DaisyChainLayer);
+				command.Append(this.Port);
+				
+				command.Append((byte)0, VariableScope.Global);
+				command.Append((byte)1, VariableScope.Global);
+				var reply = Connection.SendAndReceive(command);
+				Error.CheckForError(reply,200);
+				type = (SensorType) reply.GetByte(3);
+				mode = (SensorMode) reply.GetByte(4);
+			}
+*/
 int GetSensorMode(int sensorPort)
 {
     int mode;
@@ -579,7 +697,7 @@ int GetSensorType(int sensorPort)
                 }
             }
             */
-            type = iicStr.Type;} // still 0
+            type = *iicStr.SensorType;} // still 0
             break;
         case CONN_INPUT_DUMB :
             type = 16;
@@ -597,7 +715,7 @@ int GetSensorType(int sensorPort)
         default:
             type = 0;
     }
-    
+
     return type;
 }
 /********************************************************************************************/
@@ -617,7 +735,7 @@ int SetSensorMode(int sensorPort, int name)
     int status;
     int i;
     int pins;
-    DATA8 connection, type, mode;
+    signed char connection, type, mode;       // DATA8 = signed char
     //IICDAT iicTmpDat;
     
     if (!g_analogSensors || sensorPort < 0 || sensorPort >= INPUTS)
@@ -678,6 +796,12 @@ int SetSensorMode(int sensorPort, int name)
             connection   = CONN_INPUT_UART;
             type         = DEVICE_TYPE_EV3_US;
             mode         = US_DIST_IN_MODE;
+            pins = 0x2D;
+            break;
+        case US_LISTEN:
+            connection   = CONN_INPUT_UART;
+            type         = DEVICE_TYPE_EV3_US;
+            mode         = US_LISTEN_MODE;
             pins = 0x2D;
             break;
         // EV3-Gyroskop
@@ -865,6 +989,30 @@ int SetSensorMode(int sensorPort, int name)
             iicDat.WrData[0] = 0x08;        // I2C address
             iicDat.WrData[1] = 0x49;        // register to read
             break;
+        case HT_DIR_DCALL:
+            connection   = CONN_NXT_IIC;
+            type         = DEVICE_TYPE_HT_DIR;
+            mode         = HT_DIR_DCALL_MODE;
+            pins = 0x46;
+            iicDat.Port = sensorPort;
+            iicDat.Time = 100;
+            iicDat.Repeat = 0;
+            iicDat.RdLng = 7;               // DC Direction, S1DC, S2DC, S3DC, S4DC, S5DC, Sensor DC mean 
+            iicDat.WrLng = 2;
+            iicDat.WrData[0] = 0x08;        // I2C address
+            iicDat.WrData[1] = 0x42;        // first register to read
+        case HT_DIR_ACALL:
+            connection   = CONN_NXT_IIC;
+            type         = DEVICE_TYPE_HT_DIR;
+            mode         = HT_DIR_ACALL_MODE;
+            pins = 0x46;
+            iicDat.Port = sensorPort;
+            iicDat.Time = 100;
+            iicDat.Repeat = 0;
+            iicDat.RdLng = 6;               // AC Direction, S1AC, S2AC, S3AC, S4AC, S5AC
+            iicDat.WrLng = 2;
+            iicDat.WrData[0] = 0x08;        // I2C address
+            iicDat.WrData[1] = 0x49;        // first register to read
         default: return -1;
     }
 
@@ -933,7 +1081,8 @@ int SetSensorMode(int sensorPort, int name)
 
             if(mode != 0){
                 //LcdText(1,1,LCD_LINE2, "Set mode");
-                iicDat.Result = -1;
+                //iicDat.Result = -1;
+                iicDat.Result = BUSY;
                 /*
                 iicDat.Port = sensorPort;
                 iicDat.Time = time;
@@ -1031,45 +1180,45 @@ int ResetGyro()
         if(sensor_setup_NAME[sensorPort] == GYRO_RATE)                     // 9
         {
             mode = GYRO_RATE;
-            devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;        // 32
-			devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;               // 3
-			ioctl(g_uartFile, UART_SET_CONN, &devCon);
+            devCon.Connection[sensorPort]   = CONN_INPUT_UART;
+            devCon.Type[sensorPort]         = DEVICE_TYPE_EV3_GYRO;        // 32
+            devCon.Mode[sensorPort]         = GYRO_ANG_MODE;               // 3
+            ioctl(g_uartFile, UART_SET_CONN, &devCon);
             break;
         }
         else if(sensor_setup_NAME[sensorPort] == GYRO_ANG)                 // 8
         {
             mode = GYRO_ANG;
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-			devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;        // 32
-			devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;              // 3
-			ioctl(g_uartFile, UART_SET_CONN, &devCon);
-			break;
+            devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;        // 32
+            devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;              // 3
+            ioctl(g_uartFile, UART_SET_CONN, &devCon);
+            break;
         }
     }
-    
+
     while(!resulta){
         resulta = ReadSensor(sensorPort);
     }
-    
+
     sleep(1);
-    
+
     switch (mode)       // switch to old mode
     {
         case GYRO_RATE:
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-	        devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
-	        devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
-	        ioctl(g_uartFile, UART_SET_CONN, &devCon);
-	        break;
+            devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
+            devCon.Mode[sensorPort] 		= GYRO_RATE_MODE;
+            ioctl(g_uartFile, UART_SET_CONN, &devCon);
+            break;
         case GYRO_ANG:
             devCon.Connection[sensorPort] 	= CONN_INPUT_UART;
-	        devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
-	        devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
-	        ioctl(g_uartFile, UART_SET_CONN, &devCon);
-	        break;
-	    default:
-	        return -1;
+            devCon.Type[sensorPort] 		= DEVICE_TYPE_EV3_GYRO;
+            devCon.Mode[sensorPort] 		= GYRO_ANG_MODE;
+            ioctl(g_uartFile, UART_SET_CONN, &devCon);
+            break;
+        default:
+            return -1;
     }
     
     while(!resultb){
@@ -1216,9 +1365,9 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4)
 */
 int SetIRBeaconCH(int sensorPort, int channel)
 {
-	ir_sensor_channel[sensorPort] = channel;
-	
-	return 0;
+    ir_sensor_channel[sensorPort] = channel;
+
+    return 0;
 }
 
 /* stuff from lms2012/c_input/source/c_input.c 

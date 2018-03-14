@@ -55,6 +55,9 @@ int InitSensors();
  */
 int ReadSensor(int sensorPort);
 
+void* readIicSensorRaw(int sensorPort);
+void ReadSensorHTIRSeeker2AC(int sensorPort, int *dir, int *s1, int *s2, int *s3, int *s4, int *s5);
+
 /**
  * Returns pointer to the current sensor value.
  * The sensor value may be up to 32 bytes long - this function
@@ -97,7 +100,7 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
 /**
  * Select channel for the Beacon control
  * Note: Can be changed while running
- * Example: setAllSensorMode(IN_2, BEACON_CH_1)
+ * Example: setSensorMode(IN_2, BEACON_CH_1)
  */
 int SetIRBeaconCH(int sensorPort, int channel);
 
@@ -130,23 +133,24 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define US_DIST_CM 6        // Dist in cm
 #define US_DIST_MM 7        // Dist in mm
 #define US_DIST_IN 8        // Dist in inch
+#define US_LISTEN 9
 #define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
 
 //Gyroskop
-#define GYRO_ANG 9		    // angle
-#define GYRO_RATE 10	    // rate
+#define GYRO_ANG 10         // angle
+#define GYRO_RATE 11        // rate
 #define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
 
 //Infrared
-#define IR_PROX 11		    // Proximity
-#define IR_SEEK 12		    // Seek
-#define IR_REMOTE 13	    // Remote Control
+#define IR_PROX 12          // Proximity
+#define IR_SEEK 13          // Seek
+#define IR_REMOTE 14        // Remote Control
 #define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
 
 //NXT 
 #define NXT_IR_SEEKER 20    // Infrared Seeker
-#define NXT_TEMP_C 21 	    // Temperature in C
-#define NXT_TEMP_F 22 	    // Temperature in F
+#define NXT_TEMP_C 21       // Temperature in C
+#define NXT_TEMP_F 22       // Temperature in F
 #define NXT_SND_DB 23       // Sound Decibels
 #define NXT_SND_DBA 24      // Sound A-Weighted Decibels
 #define NXT_TOUCH 25        // 
@@ -160,28 +164,31 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
 #define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
 #define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
+#define SetSensorNXTUS(_in) SetSensorMode((_in), NXT_US_CM)
 
 // HiTechnic
 #define HT_DIR_DC 33        // Infrared Seeker DC constant IR signals
 #define HT_DIR_AC 34        // AC modulated IR signals
+#define HT_DIR_DCALL 35     // DC modulated all values IR signals
+#define HT_DIR_ACALL 36     // AC modulated all values IR signals
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0
 #define BEACON_CH_2 1
 #define BEACON_CH_3 2
 #define BEACON_CH_4 3
-#define BEACON_OFF 			0
-#define BEACON_UP_LEFT 		1
-#define BEACON_DOWN_LEFT 	2
-#define BEACON_UP_RIGHT 	3
-#define BEACON_DOWN_RIGHT 	4
-#define BEACON_UP			5
-#define BEACON_DIAG_UP_LEFT		6
-#define BEACON_DIAG_UP_RIGHT	7
-#define BEACON_DOWN 		8
-#define BEACON_ON			9
-#define BEACON_LEFT 		10
-#define BEACON_RIGHT 		11
+#define BEACON_OFF 0
+#define BEACON_UP_LEFT 1
+#define BEACON_DOWN_LEFT 2
+#define BEACON_UP_RIGHT 3
+#define BEACON_DOWN_RIGHT 4
+#define BEACON_UP 5
+#define BEACON_DIAG_UP_LEFT 6
+#define BEACON_DIAG_UP_RIGHT 7
+#define BEACON_DOWN 8
+#define BEACON_ON 9
+#define BEACON_LEFT 10
+#define BEACON_RIGHT 11
 
 
 #endif // EV3SENSOR_H

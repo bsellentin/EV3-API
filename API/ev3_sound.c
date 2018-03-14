@@ -91,7 +91,7 @@ typedef struct {
 
 SoundGlobals SoundInstance;
 
-int WriteToSoundDevice(char * bytes, int num_bytes)
+int WriteToSoundDevice(unsigned char * bytes, int num_bytes)
 {
   ssize_t result = -1;
   int sndHandle = open(LMS_SOUND_DEVICE_NAME, O_WRONLY);

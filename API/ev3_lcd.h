@@ -134,7 +134,7 @@ bool LcdCircle(char Color, short X, short Y, short R);
 bool LcdFillCircle(char Color, short X, short Y, short R);
 bool LcdSelectFont(byte FontType);
 byte* LcdGetDisplay();
-bool LcdText(char Color, short X, short Y, char* Text);
+bool LcdText(char Color, short X, short Y, char const* Text);
 bool LcdIcon(char Color, short X, short Y, char IconType, char IconNum);
 bool LcdBmpFile(char Color, short X, short Y, char* Name);
 bool LcdPicture(char Color, short X, short Y, IP pBitmap);

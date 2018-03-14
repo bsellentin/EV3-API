@@ -62,5 +62,4 @@ UARTCTL;
 #define   UART_NACK_MODE_INFO     _IOWR('u',2,UARTCTL)
 #define   UART_CLEAR_CHANGED      _IOWR('u',3,UARTCTL)
 
-
 #endif //UART_H_

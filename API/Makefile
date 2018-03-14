@@ -9,6 +9,7 @@
 # Debian stretch
 override PREFIX = /usr/bin/
 CC = $(PREFIX)arm-linux-gnueabi-gcc-6
+#CC = $(PREFIX)arm-linux-gnueabi-g++-6
 AR = $(PREFIX)arm-linux-gnueabi-ar
 
 SRCS = $(wildcard *.c)
