@@ -33,6 +33,7 @@ extern "C" {
 #ifndef ev3_command_h
 #define ev3_command_h
 
+#include <stdlib.h>
 #include <unistd.h>
 /*#include <sys/time.h>
  * modified Bernd Sellentin
@@ -43,7 +44,29 @@ extern "C" {
 
 #include "ev3_constants.h"
 
+/**
+ * Wait(unsignes long  ms)
+ * @brief Sleep for specified time 
+ *  
+ * @param unsignes long ms
+*/ 
 void Wait(unsigned long ms);
+
+/**
+ * CurrentTick()
+ * @brief Read the current system tick.
+ * @return long ms since programmstart
+*/ 
+long CurrentTick();
+
+/**
+ * int Random (int max)
+ * @brief Generate random number. The returned value will range
+ * between 0 and max (exclusive).
+ * @param int max
+ * @return random integer form 0...max-1
+*/
+int Random(int max);
 
 #endif // ev3_command_h
 
