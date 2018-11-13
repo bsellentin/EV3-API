@@ -40,13 +40,7 @@ extern "C" {
 #ifndef ev3_constants_h
 #define ev3_constants_h
 
-#ifndef byte
-#define byte unsigned char
-#endif
-
-#ifndef word
-#define word unsigned short
-#endif
+#include <stdint.h>
 
 /** @addtogroup MiscConstants
  * @{

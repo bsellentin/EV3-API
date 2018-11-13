@@ -132,8 +132,8 @@ int wait_no_zero_status(int sensorPort);
 int clear_change(int sensorPort);
 int reset_nxt_iic_device(int sensorPort);
 
-void      cInputCalcFullScale(UWORD *pRawVal, UWORD ZeroPointOffset, UBYTE PctFullScale, UBYTE InvStatus);
-void      cInputCalibrateColor(COLORSTRUCT *pC, UWORD *pNewVals);
+void      cInputCalcFullScale(uint16_t *pRawVal, uint16_t ZeroPointOffset, uint8_t PctFullScale, uint8_t InvStatus);
+void      cInputCalibrateColor(COLORSTRUCT *pC, uint16_t *pNewVals);
 DATAF     cInputCalculateColor(COLORSTRUCT *pC);
 
 
@@ -1385,10 +1385,10 @@ int SetIRBeaconCH(int sensorPort, int channel)
 #define   COLORSENSORBGMIN              (214/(AD_FS/AD_MAX))
 #define   COLORSENSORMIN                (1L/(AD_FS/AD_MAX)) /* 1 inserted else div 0 (1L/(120/AD_MAX)) */
 #define   COLORSENSORMAX                ((AD_MAX * AD_FS)/3300)
-#define   COLORSENSORPCTDYN             (UBYTE)(((COLORSENSORMAX - COLORSENSORMIN) * 100L)/AD_MAX)
-#define   COLORSENSORBGPCTDYN           (UBYTE)(((COLORSENSORMAX - COLORSENSORBGMIN) * 100L)/AD_MAX)
+#define   COLORSENSORPCTDYN             (uint8_t)(((COLORSENSORMAX - COLORSENSORMIN) * 100L)/AD_MAX)
+#define   COLORSENSORBGPCTDYN           (uint8_t)(((COLORSENSORMAX - COLORSENSORBGMIN) * 100L)/AD_MAX)
 
-void      cInputCalcFullScale(UWORD *pRawVal, UWORD ZeroPointOffset, UBYTE PctFullScale, UBYTE InvStatus)
+void      cInputCalcFullScale(uint16_t *pRawVal, uint16_t ZeroPointOffset, uint8_t PctFullScale, uint8_t InvStatus)
 {
   if (*pRawVal >= ZeroPointOffset)
   {
@@ -1410,10 +1410,10 @@ void      cInputCalcFullScale(UWORD *pRawVal, UWORD ZeroPointOffset, UBYTE PctFu
   }
 }
 
-void cInputCalibrateColor(COLORSTRUCT *pC, UWORD *pNewVals)
+void cInputCalibrateColor(COLORSTRUCT *pC, uint16_t *pNewVals)
 {
 
-  UBYTE CalRange;
+  uint8_t CalRange;
 
   if ((pC->ADRaw[BLANK]) < pC->CalLimits[1])
   {
@@ -1434,24 +1434,24 @@ void cInputCalibrateColor(COLORSTRUCT *pC, UWORD *pNewVals)
   pNewVals[RED] = 0;
   if ((pC->ADRaw[RED]) > (pC->ADRaw[BLANK]))
   {
-    pNewVals[RED] = (UWORD)(((ULONG)((pC->ADRaw[RED]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][RED])) >> 16);
+    pNewVals[RED] = (uint16_t)(((uint32_t)((pC->ADRaw[RED]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][RED])) >> 16);
   }
 
   pNewVals[GREEN] = 0;
   if ((pC->ADRaw[GREEN]) > (pC->ADRaw[BLANK]))
   {
-     pNewVals[GREEN] = (UWORD)(((ULONG)((pC->ADRaw[GREEN]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][GREEN])) >> 16);
+     pNewVals[GREEN] = (uint16_t)(((uint32_t)((pC->ADRaw[GREEN]) - (pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][GREEN])) >> 16);
   }
 
   pNewVals[BLUE] = 0;
   if ((pC->ADRaw[BLUE]) > (pC->ADRaw[BLANK]))
   {
-    pNewVals[BLUE] = (UWORD)(((ULONG)((pC->ADRaw[BLUE]) -(pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][BLUE])) >> 16);
+    pNewVals[BLUE] = (uint16_t)(((uint32_t)((pC->ADRaw[BLUE]) -(pC->ADRaw[BLANK])) * (pC->Calibration[CalRange][BLUE])) >> 16);
   }
 
   pNewVals[BLANK] = (pC->ADRaw[BLANK]);
   cInputCalcFullScale(&(pNewVals[BLANK]), COLORSENSORBGMIN, COLORSENSORBGPCTDYN, FALSE);
-  (pNewVals[BLANK]) = (UWORD)(((ULONG)(pNewVals[BLANK]) * (pC->Calibration[CalRange][BLANK])) >> 16);
+  (pNewVals[BLANK]) = (uint16_t)(((uint32_t)(pNewVals[BLANK]) * (pC->Calibration[CalRange][BLANK])) >> 16);
 }
 
 DATAF     cInputCalculateColor(COLORSTRUCT *pC)
