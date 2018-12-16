@@ -40,13 +40,7 @@ extern "C" {
 #ifndef ev3_constants_h
 #define ev3_constants_h
 
-#ifndef byte
-#define byte unsigned char
-#endif
-
-#ifndef word
-#define word unsigned short
-#endif
+#include <stdint.h>
 
 /** @addtogroup MiscConstants
  * @{
@@ -54,7 +48,8 @@ extern "C" {
 #define TRUE  1 /*!< A true value */
 #define FALSE 0 /*!< A false value */
 
-#define NUM_INPUTS     4   /*!< Number of input  ports in the system */
+#define INPUTS         4   /*!< Number of input  ports in the system */
+#define OUTPUTS        4   //!< Number of output ports in the system
 #define NUM_LEDS       4   /*!< Number of LEDs in the system */
 #define LCD_WIDTH      178 /*!< LCD horizontal pixels */
 #define LCD_HEIGHT     128 /*!< LCD vertical pixels */
@@ -161,17 +156,24 @@ extern "C" {
 #define RESET_ALL            0x68 /*!< Reset all tachometer counters */
 /** @} */  // end of TachoResetConstants group
 
-#define NUM_OUTPUTS 4   //!< Number of output ports in the system
 
 // Reserved device types
 #define DEVICE_TYPE_NXT_TOUCH           1  //!< Device is NXT touch sensor
 #define DEVICE_TYPE_NXT_LIGHT           2  //!< Device is NXT light sensor
 #define DEVICE_TYPE_NXT_SOUND           3  //!< Device is NXT sound sensor
 #define DEVICE_TYPE_NXT_COLOR           4  //!< Device is NXT color sensor
+#define DEVICE_TYPE_NXT_US              5  //!< Device is NXT ultrasonic sensor
+#define DEVICE_TYPE_NXT_TEMP            6  
 #define DEVICE_TYPE_TACHO               7  //!< Device is a tacho motor
 #define DEVICE_TYPE_MINITACHO           8  //!< Device is a mini tacho motor
 #define DEVICE_TYPE_NEWTACHO            9  //!< Device is a new tacho motor
+#define DEVICE_TYPE_EV3_TOUCH          16
+#define DEVICE_TYPE_EV3_COL            29
+#define DEVICE_TYPE_EV3_US             30
+#define DEVICE_TYPE_EV3_GYRO           32
+#define DEVICE_TYPE_EV3_IR             33
 #define DEVICE_TYPE_THIRD_PARTY_START  50
+#define DEVICE_TYPE_HT_DIR             52  //!< Device is HiTechnic Infrared Seeker
 #define DEVICE_TYPE_THIRD_PARTY_END    99
 #define DEVICE_TYPE_IIC_UNKNOWN       100
 #define DEVICE_TYPE_NXT_TEST          101  //!< Device is a NXT ADC test sensor
@@ -181,15 +183,18 @@ extern "C" {
 #define DEVICE_TYPE_NONE              126  //!< Port empty or not available
 #define DEVICE_TYPE_ERROR             127  //!< Port not empty and type is invalid
 
+#define MAX_DEVICE_TYPE 127         //!< Highest type number (positive)
 #define MAX_DEVICE_DATALENGTH 32
 #define MAX_DEVICE_MODES      8
-#define UART_DATA_LENGTH      MAX_DEVICE_DATALENGTH
-#define UART_BUFFER_SIZE      64
+#define MAX_DEVICE_TYPES      ((MAX_DEVICE_TYPE + 1) * MAX_DEVICE_MODES)//!< Max number of different device types and modes (max type data list size)
+
+//#define UART_DATA_LENGTH      MAX_DEVICE_DATALENGTH  // in uart.h
+//#define UART_BUFFER_SIZE      64
 #define TYPE_NAME_LENGTH      11
 #define SYMBOL_LENGTH         4
 #define DEVICE_LOGBUF_SIZE    300
-#define IIC_DATA_LENGTH       MAX_DEVICE_DATALENGTH
-#define IIC_NAME_LENGTH       8
+//#define IIC_DATA_LENGTH       MAX_DEVICE_DATALENGTH  // in iic.h
+//#define IIC_NAME_LENGTH       8
 
 // connection types
 #define CONN_UNKNOWN            111  //!< Connection is fake (test)
@@ -263,7 +268,7 @@ extern "C" {
 /** @} */  // end of ButtonModuleConstants group
 /** @} */  // end of ButtonModule group
 
-
+/*
 #define NXTCOLOR_IDX_RED    0 //!< Access the red value from color sensor value arrays
 #define NXTCOLOR_IDX_GREEN  1 //!< Access the green value from color sensor value arrays
 #define NXTCOLOR_IDX_BLUE   2 //!< Access the blue value from color sensor value arrays
@@ -281,6 +286,7 @@ extern "C" {
 #define INPUT_YELLOWCOLOR 4 //!< The color value is yellow
 #define INPUT_REDCOLOR    5 //!< The color value is red
 #define INPUT_WHITECOLOR  6 //!< The color value is white
+*/
 
 #define FILETYPE_UNKNOWN  0x00
 #define FILETYPE_FOLDER   0x01
@@ -300,6 +306,7 @@ extern "C" {
 #define FONTTYPE_TINY   3
 #define NUM_FONTTYPES   4 //!< Maximum font types supported by the VM
 
+// Icon Types Avaliable
 #define ICONTYPE_NORMAL 0
 #define ICONTYPE_SMALL  1
 #define ICONTYPE_LARGE  2
@@ -307,41 +314,107 @@ extern "C" {
 #define ICONTYPE_ARROW  4
 #define NUM_ICONTYPES   5 //!< Maximum icon types supported by the VM
 
-#define NICON_NONE         -1
-#define NICON_RUN          0
-#define NICON_FOLDER       1
-#define NICON_FOLDER2      2
-#define NICON_USB          3
-#define NICON_SD           4
-#define NICON_SOUND        5
-#define NICON_IMAGE        6
-#define NICON_SETTINGS     7
-#define NICON_ONOFF        8
-#define NICON_SEARCH       9
-#define NICON_WIFI         10
-#define NICON_CONNECTIONS  11
-#define NICON_ADD_HIDDEN   12
-#define NICON_TRASHBIN     13
-#define NICON_VISIBILITY   14
-#define NICON_KEY          15
-#define NICON_CONNECT      16
-#define NICON_DISCONNECT   17
-#define NICON_UP           18
-#define NICON_DOWN         19
-#define NICON_WAIT1        20
-#define NICON_WAIT2        21
-#define NICON_BLUETOOTH    22
-#define NICON_INFO         23
-#define NICON_TEXT         24
-#define NICON_QUESTIONMARK 27
-#define NICON_INFO_FILE    28
-#define NICON_DISC         29
-#define NICON_CONNECTED    30
-#define NICON_OBP          31
-#define NICON_OBD          32
-#define NICON_OPENFOLDER   33
-#define NICON_BRICK1       34
-#define NUM_NICONS         35
+// S_ICON numbers
+#define S_ICON_CHARGING        0
+#define S_ICON_BATT_4          1
+#define S_ICON_BATT_3          2
+#define S_ICON_BATT_2          3
+#define S_ICON_BATT_1          4
+#define S_ICON_BATT_0          5
+#define S_ICON_WAIT1           6
+#define S_ICON_WAIT2           7
+#define S_ICON_BT_ON           8
+#define S_ICON_BT_VISIBLE      9
+#define S_ICON_BT_CONNECTED    10
+#define S_ICON_BT_CONNVISIB    11
+#define S_ICON_WIFI_3          12
+#define S_ICON_WIFI_2          13
+#define S_ICON_WIFI_1          14
+#define S_ICON_WIFI_CONNECTED  15
+#define S_ICON_USB             21
+#define NUM_S_ICONS            22
+// N_ICON numbers
+#define N_ICON_NONE         -1
+#define N_ICON_RUN          0
+#define N_ICON_FOLDER       1
+#define N_ICON_FOLDER2      2
+#define N_ICON_USB          3
+#define N_ICON_SD           4
+#define N_ICON_SOUND        5
+#define N_ICON_IMAGE        6
+#define N_ICON_SETTINGS     7
+#define N_ICON_ONOFF        8
+#define N_ICON_SEARCH       9
+#define N_ICON_WIFI         10
+#define N_ICON_CONNECTIONS  11
+#define N_ICON_ADD_HIDDEN   12
+#define N_ICON_TRASHBIN     13
+#define N_ICON_VISIBILITY   14
+#define N_ICON_KEY          15
+#define N_ICON_CONNECT      16
+#define N_ICON_DISCONNECT   17
+#define N_ICON_UP           18
+#define N_ICON_DOWN         19
+#define N_ICON_WAIT1        20
+#define N_ICON_WAIT2        21
+#define N_ICON_BLUETOOTH    22
+#define N_ICON_INFO         23
+#define N_ICON_TEXT         24
+#define N_ICON_QUESTIONMARK 27
+#define N_ICON_INFO_FILE    28
+#define N_ICON_DISC         29
+#define N_ICON_CONNECTED    30
+#define N_ICON_OBP          31
+#define N_ICON_OBD          32
+#define N_ICON_OPENFOLDER   33
+#define N_ICON_BRICK1       34
+#define NUM_N_ICONS         35
+// L_ICON numbers
+#define L_ICON_YES_NOTSEL    0
+#define L_ICON_YES_SEL       1
+#define L_ICON_NO_NOTSEL     2
+#define L_ICON_NO_SEL        3
+#define L_ICON_OFF           4
+#define L_ICON_WAIT_VERT     5
+#define L_ICON_WAIT_HORZ     6
+#define L_ICON_TO_MANUAL     7
+#define L_ICON_WARNSIGN      8
+#define L_ICON_WARN_BATT     9
+#define L_ICON_WARN_POWER    10
+#define L_ICON_WARN_TEMP     11
+#define L_ICON_NO_USBSTICK   12
+#define L_ICON_TO_EXECUTE    13
+#define L_ICON_TO_BRICK      14
+#define L_ICON_TO_SDCARD     15
+#define L_ICON_TO_USBSTICK   16
+#define L_ICON_TO_BLUETOOTH  17
+#define L_ICON_TO_WIFI       18
+#define L_ICON_TO_TRASH      19
+#define L_ICON_TO_COPY       20
+#define L_ICON_TO_FILE       21
+#define L_ICON_CHAR_ERROR    22
+#define L_ICON_COPY_ERROR    23
+#define L_ICON_PROGRAM_ERROR 24
+#define L_ICON_WARN_MEMORY   27
+#define NUM_L_ICONS          28
+// M_ICON numbers
+#define M_ICON_STAR          0
+#define M_ICON_LOCKSTAR      1
+#define M_ICON_LOCK          2
+#define M_ICON_PC            3 // Bluetooth type PC
+#define M_ICON_PHONE         4 // Bluetooth type PHONE
+#define M_ICON_BRICK         5 // Bluetooth type BRICK
+#define M_ICON_UNKNOWN       6 // Bluetooth type UNKNOWN
+#define M_ICON_FROM_FOLDER   7
+#define M_ICON_CHECKBOX      8
+#define M_ICON_CHECKED       9
+#define M_ICON_XED           10
+#define NUM_M_ICONS          11
+// A_ICON numbers
+#define A_ICON_STAR   0
+#define A_ICON_LEFT   1
+#define A_ICON_RIGHT  2
+#define NUM_A_ICONS   3
 
 #define PATH_SIZE     84  //!< Max path size excluding trailing forward slash including zero termination
 #define NAME_SIZE     32  //!< Max name size including zero termination (must be divideable by 4)

@@ -28,15 +28,17 @@ typedef   enum
   STOP          = 4                     //!< Stopped
 }
 RESULT;
+
+
 typedef   struct
 {
   TYPES   TypeData[INPUTS][MAX_DEVICE_MODES]; //!< TypeData
 
 #ifndef DISABLE_FAST_DATALOG_BUFFER
-  UWORD   Repeat[INPUTS][DEVICE_LOGBUF_SIZE];
+  uint16_t   Repeat[INPUTS][DEVICE_LOGBUF_SIZE];
   DATA8   Raw[INPUTS][DEVICE_LOGBUF_SIZE][IIC_DATA_LENGTH];      //!< Raw value from IIC device
-  UWORD   Actual[INPUTS];
-  UWORD   LogIn[INPUTS];
+  uint16_t   Actual[INPUTS];
+  uint16_t   LogIn[INPUTS];
 #else
   DATA8   Raw[INPUTS][IIC_DATA_LENGTH];      //!< Raw value from IIC device
 #endif
@@ -46,6 +48,20 @@ typedef   struct
   DATA8   OutputLength[INPUTS];
 }
 IIC;
+
+
+#define   IIC_PORT_CHANGED       0x01         //!< Input port changed
+#define   IIC_DATA_READY         0x08         //!< Data is ready
+#define   IIC_WRITE_REQUEST      0x10         //!< Write request
+
+typedef   struct
+{
+  TYPES   TypeData;
+  DATA8   Port;
+  DATA8   Mode;
+}
+IICCTL;
+
 
 typedef   struct
 {
@@ -61,5 +77,25 @@ typedef   struct
 IICDAT;
 
 
+typedef   struct
+{
+  DATA8   Port;
+  DATA16  Time;
+  DATA8   Type;
+  DATA8   Mode;
+  DATA8   Manufacturer[IIC_NAME_LENGTH + 1];
+  DATA8   SensorType[IIC_NAME_LENGTH + 1];
+  DATA8   SetupLng;
+  uint32_t   SetupString;
+  DATA8   PollLng;
+  uint32_t   PollString;
+  DATA8   ReadLng;
+}
+IICSTR;
+
+#define   IIC_SET_CONN            _IOWR('i',2,DEVCON)
+#define   IIC_READ_TYPE_INFO      _IOWR('i',3,IICCTL)
+#define   IIC_SETUP               _IOWR('i',5,IICDAT)
+#define   IIC_SET                 _IOWR('i',6,IICSTR)
 
 #endif //IIC_H_

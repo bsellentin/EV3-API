@@ -2,6 +2,9 @@
 #ifndef ANALOG_H_
 #define ANALOG_H_
 
+#include "basictypes.h"
+#include "typedata.h"
+
 /*! \page NxtColorMemory
  *
  *  <b>     Shared Memory </b>
@@ -12,16 +15,39 @@
  *  \verbatim
  */
 
+typedef   enum
+{
+  RED           =  0,
+  GREEN         =  1,
+  BLUE          =  2,
+  BLANK         =  3,
+  COLORS
+}
+COLOR;
+
+/* Constants related to color sensor value using */
+/* Color sensor as color detector                */
+typedef   enum
+{
+  BLACKCOLOR   = 1,
+  BLUECOLOR    = 2,
+  GREENCOLOR   = 3,
+  YELLOWCOLOR  = 4,
+  REDCOLOR     = 5,
+  WHITECOLOR   = 6
+}
+NXTCOLOR;
+
 #define   COLORS                        4
 #define   CALPOINTS                     3
 
 typedef   struct
 {
-  ULONG   Calibration[CALPOINTS][COLORS];
-  UWORD   CalLimits[CALPOINTS - 1];
-  UWORD   Crc;
-  UWORD   ADRaw[COLORS];
-  UWORD   SensorRaw[COLORS];
+  uint32_t   Calibration[CALPOINTS][COLORS];
+  uint16_t   CalLimits[CALPOINTS - 1];
+  uint16_t   Crc;
+  uint16_t   ADRaw[COLORS];
+  uint16_t   SensorRaw[COLORS];
 }
 COLORSTRUCT;
 
@@ -36,6 +62,7 @@ COLORSTRUCT;
  *  \verbatim
  */
 
+
 typedef   struct
 {
   DATA16  InPin1[INPUTS];         //!< Analog value at input port connection 1
@@ -48,9 +75,9 @@ typedef   struct
 #ifndef DISABLE_FAST_DATALOG_BUFFER
   DATA16  Pin1[INPUTS][DEVICE_LOGBUF_SIZE];      //!< Raw value from analog device
   DATA16  Pin6[INPUTS][DEVICE_LOGBUF_SIZE];      //!< Raw value from analog device
-  UWORD   Actual[INPUTS];
-  UWORD   LogIn[INPUTS];
-  UWORD   LogOut[INPUTS];
+  uint16_t   Actual[INPUTS];
+  uint16_t   LogIn[INPUTS];
+  uint16_t   LogOut[INPUTS];
 #endif
 #ifndef   DISABLE_OLD_COLOR
   COLORSTRUCT  NxtCol[INPUTS];
@@ -65,7 +92,7 @@ typedef   struct
   DATA8   OutDcm[OUTPUTS];        //!< Output port device types
   DATA8   OutConn[OUTPUTS];
 #ifndef DISABLE_PREEMPTED_VM
-  UWORD   PreemptMilliSeconds;
+  uint16_t   PreemptMilliSeconds;
 #endif
 }
 ANALOG;

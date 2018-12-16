@@ -30,3 +30,15 @@ void Wait(unsigned long ms)
   while (nanosleep(&delay, &delay));
 }
 
+long CurrentTick()
+{
+  clock_t start;
+  start = clock();
+  long ms = start * 1000 / CLOCKS_PER_SEC;
+  return ms;
+}
+
+int Random(int max)
+{
+    return rand() / (RAND_MAX / max); 
+}
