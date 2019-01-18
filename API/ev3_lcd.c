@@ -123,6 +123,7 @@ typedef struct
 #include "large_font.xbm"
 #include "tiny_font.xbm"
 
+
 FONTINFO FontInfo[] =
 {
   [FONTTYPE_NORMAL] = {
@@ -183,6 +184,7 @@ typedef   struct
 #include "large_icons.xbm"
 #include "menu_icons.xbm"
 #include "arrow_icons.xbm"
+
 
 ICONINFO IconInfo[] =
 {
@@ -349,71 +351,64 @@ void LcdCloseDevices()
 
 bool LcdInit()
 {
-	uint8_t * pTmp;
-	if (LcdInitialized()) return true;
+    uint8_t * pTmp;
+    if (LcdInitialized()) return true;
 
-	LCDInstance.autoRefresh = true;
-	LCDInstance.Dirty = false;
-	LCDInstance.pFB0 = NULL;
-	LCDInstance.DispFile = -1;
-	LCDInstance.font = NULL;
-	LCDInstance.pLcd = NULL;
-	LCDInstance.currentFont = FONTTYPE_NORMAL;
+    LCDInstance.autoRefresh = true;
+    LCDInstance.Dirty = false;
+    LCDInstance.pFB0 = NULL;
+    LCDInstance.DispFile = -1;
+    LCDInstance.font = NULL;
+    LCDInstance.pLcd = NULL;
+    LCDInstance.currentFont = FONTTYPE_NORMAL;
 
-	LCDInstance.DispFile = open(LMS_LCD_DEVICE_NAME, O_RDWR);
-	if (LCDInstance.DispFile != -1)
-	{
-		pTmp = (uint8_t*)mmap(NULL, LCD_BUFFER_LENGTH, PROT_READ + PROT_WRITE, MAP_SHARED, LCDInstance.DispFile, 0);
-		if (pTmp == MAP_FAILED)
-		{
-			LcdCloseDevices();
-			return false;
-		}
-		else
-		{
-			LCDInstance.pFB0 = pTmp;
+    LCDInstance.DispFile = open(LMS_LCD_DEVICE_NAME, O_RDWR);
+    if (LCDInstance.DispFile != -1)
+    {
+        pTmp = (uint8_t*)mmap(NULL, LCD_BUFFER_LENGTH, PROT_READ + PROT_WRITE, MAP_SHARED, LCDInstance.DispFile, 0);
+        if (pTmp == MAP_FAILED)
+        {
+            LcdCloseDevices();
+            return false;
+        }
+        else
+        {
+            LCDInstance.pFB0 = pTmp;
 //      LCDInstance.font := @(font_data[0]);
-			LCDInstance.pLcd = LCDInstance.displayBuf;
+            LCDInstance.pLcd = LCDInstance.displayBuf;
 
-			// initialize timer system
-			TimerInit();
+#ifndef DISABLE_TIMERS
 
-			// register update handler with timer system
-			SetTimerCallback(ti250ms, &LcdUpdateHandler);
+            // initialize timer system
+            TimerInit(25);
 
-			return true;
-		}
-	}
+            // register update handler with timer system
+            SetTimerCallback(ti250ms, &LcdUpdateHandler);
+#endif
+
+            return true;
+        }
+    }
 
         return false;
 }
 
-bool LcdOpen()
-{
-  return true;
-}
-
-bool LcdClose()
-{
-  return true;
-}
-
 bool LcdExit()
 {
-  // if not initialized then just exit
-  if (!LcdInitialized())
+    // if not initialized then just exit
+    if (!LcdInitialized())
+        return true;
+
+    LcdCloseDevices();
+
+    LCDInstance.font = NULL;
+    LCDInstance.pLcd = NULL;
     return true;
-
-  LcdCloseDevices();
-
-  LCDInstance.font = NULL;
-  LCDInstance.pLcd = NULL;
-  return true;
 }
 
 bool LcdInitialized()
 {
-  return (LCDInstance.DispFile != -1) &&
+    return (LCDInstance.DispFile != -1) &&
          (LCDInstance.pFB0 != NULL);
 }
 
@@ -534,7 +529,7 @@ void dLcdDrawChar(uint8_t *pImage, char Color, short X0, short Y0, char Font, ch
 
 void dLcdDrawText(uint8_t *pImage, char Color, short X0, short Y0, char Font, char const *pText)
 {
-  while (*pText)
+   while (*pText)
   {
     if (X0 < (LCD_WIDTH - FontInfo[Font].FontWidth))
     {
@@ -723,13 +718,6 @@ bool LcdClean()
   LCDInstance.Dirty = true;
   return true;
 }
-
-void LcdClearDisplay()
-{
-  LcdClean();
-  LCDInstance.Dirty = true;
-}
-
 bool LcdScroll(short Y)
 {
   if (LcdInitialized())
@@ -810,6 +798,7 @@ uint8_t reverse_bits(uint8_t b)
 {
   return reverse_bits_table[b];
 }
+
 
 void _lcdWriteBytesToFile(ImageFormat fmt, uint8_t* data, char* filename, uint8_t width, uint8_t height)
 {
@@ -932,7 +921,7 @@ void LcdWriteFrameBufferToFile(char* filename, ImageFormat fmt)
   _lcdWriteBytesToFile(fmt, pSrc, filename, 178, 128);
 }
 
-bool LcdText(char Color, short X, short Y, char const* Text)
+bool LcdText(char Color, short X, short Y, char* Text)
 {
   if (!LcdInitialized())
     return false;
@@ -987,7 +976,7 @@ bool LcdFillWindow(char Color, short Y, short Y1)
     return false;
 
   short Y2, Y3, Tmp;
-  
+
   LCDInstance.currentFont = FONTTYPE_NORMAL;
 
   if ((Y + Y1) < LCD_HEIGHT)
@@ -1343,7 +1332,7 @@ void CmdDrawLine(int x1, int y1, int x2, int y2, uint8_t PixelMode)
 {
   int tx, ty, dx, dy;
   int d, x, y, ax, ay, sx, sy;
-  
+
   dx = x2-x1;
   dy = y2-y1;
 
@@ -1467,7 +1456,7 @@ void CmdDrawRect(int left, int bottom, int width, int height, uint8_t PixelMode,
   int y1 = bottom;
   int y2 = bottom + height;
   int t;
-  
+
   if (x1 > x2)
   {
     t = x1; x1 = x2; x2 = t;
@@ -1723,6 +1712,7 @@ char EllipseOutEx(int x, int y, uint8_t radiusX, uint8_t radiusY, unsigned long 
   return 0;
 }
 
+#if 0
 char PolyOutEx(PLocationType points, unsigned long options)
 {
   return 0;
@@ -1737,7 +1727,7 @@ char GraphicArrayOutEx(int x, int y, uint8_t* data, unsigned long options)
 {
   return 0;
 }
-
+#endif
 
 /********************************************************************************************/
 /**
@@ -1817,7 +1807,7 @@ int LcdPrintf(char color, const char *fmt, ...)
 	va_start(ap, fmt);
 	ret = vasprintf(&buf, fmt, ap);
 	va_end(ap);
-	
+
 	const char *c = buf;
 	const short width = FontInfo[LCDInstance.currentFont].FontWidth;
 	const short height = FontInfo[LCDInstance.currentFont].FontHeight;
@@ -1857,6 +1847,43 @@ int LcdPrintf(char color, const char *fmt, ...)
 		c++;
 	}
 	LCDInstance.Dirty = true;
-		
+
 	return c - buf;
 }
+
+#if 0
+int Ev3Printf(const char *fmt, ...)
+{
+	va_list args;
+	char *buffer;
+
+	va_start(args, fmt);
+	vasprintf(&buffer, fmt, args);
+	va_end(args);
+
+	int ret = LcdPrintf(1, buffer);	// LcdPrintf with color=1 for black text
+
+	return ret;
+}
+
+int Ev3Println(const char *fmt, ...)
+{
+	char *buffer;
+	vaprintf(buffer, "%s%s", "\n");
+
+	va_list args;
+	char *buffer2;
+
+	va_start(args, fmt);
+	vasprintf(&buffer2, fmt, args);
+	va_end(args);
+
+	return Ev3Printf(buffer2);
+}
+
+void Ev3Clear()
+{
+	LcdClean();
+	LcdPrintf("%s", "\f");
+}
+#endif

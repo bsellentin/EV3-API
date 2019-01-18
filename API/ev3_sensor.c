@@ -44,7 +44,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdint.h>
-//#include "lms2012.h"
 //#include "uart.h"
 //#include "iic.h"
 //#include "analog.h"
@@ -55,39 +54,42 @@
 
 /***********************************/
 // see "LEGO mindstorms ev3 firmware developer kit.pdf" chap.5 Device type list p.100ff
-/**
- * \brief Identifier for sensor types and modes
+/** @addtogroup InputModuleConstants
+ * @{
+ *   @defgroup InputModuleDeviceModes Input device modes constants
+ *   @{
+ *     \brief Identifier for sensor types and modes
  */
  
 // EV3-TOUCH
 //#define TOUCH_TYPE 16             // in ev3_constants: reserved device types
-#define TOUCH_PRESS_MODE 0          // Press
-#define TOUCH_BUMP_MODE 1           // count
+#define TOUCH_PRESS_MODE 0          //!< EV3-Touch press
+#define TOUCH_BUMP_MODE 1           //!< EV3-Touch count
 
 // EV3-Light
 //#define COL_TYPE 29
-#define COL_REFLECT_MODE 0          // Reflect
-#define COL_AMBIENT_MODE 1          // Ambient
-#define COL_COLOR_MODE 2            // Color
+#define COL_REFLECT_MODE 0          //!< EV3-Light Reflect
+#define COL_AMBIENT_MODE 1          //!< EV3-Light Ambient
+#define COL_COLOR_MODE 2            //!< EV3-Light Color
 
 // EV3-Ultrasonic
 //#define US_TYPE 30
-#define US_DIST_CM_MODE 0           // Dist in cm
-#define US_DIST_MM_MODE 0           // Dist in mm
-#define US_DIST_IN_MODE 1           // Dist in inch
-#define US_LISTEN_MODE 2            // are other ultrasonic signals
+#define US_DIST_CM_MODE 0           //!< EV3-Ultrasonic Dist in cm
+#define US_DIST_MM_MODE 0           //!< EV3-Ultrasonic Dist in mm
+#define US_DIST_IN_MODE 1           //!< EV3-Ultrasonic Dist in inch
+#define US_LISTEN_MODE 2            //!< EV3-Ultrasonic are other ultrasonic signals
 
 // Gyroskop
 //#define GYRO_TYPE 32
-#define GYRO_ANG_MODE 0             // angle
-#define GYRO_RATE_MODE 1            // rate
-#define GYRO_AR_MODE 3              // angle and rate
+#define GYRO_ANG_MODE 0             //!< EV3-Gyro angle
+#define GYRO_RATE_MODE 1            //!< EV3-Gyro rate
+#define GYRO_AR_MODE 3              //!< EV3-Gyro angle and rate
 
 // Infrared
 //#define IR_TYPE 33
-#define IR_PROX_MODE 0              // Proximity
-#define IR_SEEK_MODE 1              // Seek
-#define IR_REMOTE_MODE 2            // Remote Control
+#define IR_PROX_MODE 0              //!< EV3 Infrared Proximity
+#define IR_SEEK_MODE 1              //!< EV3 Infrared Seek
+#define IR_REMOTE_MODE 2            //!< EV3 Infrared Remote Control
 
 // IIC 
 //#define IIC_TYPE 100
@@ -95,28 +97,28 @@
 
 // NXT Temperature
 //#define NXT_TEMP_TYPE 6
-#define NXT_TEMP_C_MODE 0           // Temperature in C
-#define NXT_TEMP_F_MODE 1           // Temperature in F
+#define NXT_TEMP_C_MODE 0           //!<  Temperature in C
+#define NXT_TEMP_F_MODE 1           //!<  Temperature in F
 
 // NXT Sensors
-//#define TYPE_NXT_TOUCH 1            //!< Device is NXT touch sensor lms2012.h Z566
-#define NXT_TOUCH_MODE 0
-//#define TYPE_NXT_LIGHT 2            //!< Device is NXT light sensor
-#define NXT_LIGHT_REFLECTED_MODE 0
-#define NXT_LIGHT_AMBIENT_MODE 1
-//#define TYPE_NXT_SND 3              //!< Device is NXT sound sensorPort
-#define NXT_SND_DB_MODE 0 
-#define NXT_SND_DBA_MODE 1
-//#define TYPE_NXT_COL 4              //!< Device is NXT color sensor
-#define NXT_COL_REFLECTED_MODE 0
-#define NXT_COL_AMBIENT_MODE 1
-#define NXT_COL_COLOR_MODE 2
-#define NXT_COL_GREEN_MODE 3
-#define NXT_COL_BLUE_MODE 4
-#define NXT_COL_RAW_MODE 5
-//#define TYPE_NXT_US 5               //!< Device is NXT Ultrasonic sensor
-#define NXT_US_CM_MODE 0
-#define NXT_US_IN_MODE 1
+//#define TYPE_NXT_TOUCH 1          //!< Device is NXT touch sensor lms2012.h Z566
+#define NXT_TOUCH_MODE 0            //!< NXT touch
+//#define TYPE_NXT_LIGHT 2          //!< Device is NXT light sensor
+#define NXT_LIGHT_REFLECTED_MODE 0  //!< NXT light v1 reflected
+#define NXT_LIGHT_AMBIENT_MODE 1    //!< NXT light v1 ambient
+//#define TYPE_NXT_SND 3            //!< Device is NXT sound sensorPort
+#define NXT_SND_DB_MODE 0           //!< NXT sound db
+#define NXT_SND_DBA_MODE 1          //!< NXT sound dba
+//#define TYPE_NXT_COL 4            //!< Device is NXT color sensor
+#define NXT_COL_REFLECTED_MODE 0    //!< NXT color reflected
+#define NXT_COL_AMBIENT_MODE 1      //!< NXT color ambient
+#define NXT_COL_COLOR_MODE 2        //!< NXT color color
+#define NXT_COL_GREEN_MODE 3        //!< NXT color green
+#define NXT_COL_BLUE_MODE 4         //!< NXT color blue
+#define NXT_COL_RAW_MODE 5          //!< NXT color raw
+//#define TYPE_NXT_US 5             //!< Device is NXT Ultrasonic sensor
+#define NXT_US_CM_MODE 0            //!< NXT Ultrasonic cm
+#define NXT_US_IN_MODE 1            //!< NXT Ultrasonic inch
 
 // HT Sensors
 //#define TYPE_HT_DIR 52              //!< Device is HiTechnic Infrared Seeker
@@ -125,6 +127,8 @@
 #define HT_DIR_DCALL_MODE 2
 #define HT_DIR_ACALL_MODE 3
 
+/** @} */
+/** @} */
 
 /***********************************/
 
@@ -160,8 +164,11 @@ int ir_sensor_channel[INPUTS];
 * 		 date: 2015-02-28
 *
 */
-int InitSensors()
+int SensorsInit()
 {
+    if (SensorsInitialized())
+		return 0;
+
     g_uartFile      = open(LMS_UART_DEVICE_NAME, O_RDWR | O_SYNC);
     g_iicFile       = open(LMS_IIC_DEVICE_NAME, O_RDWR | O_SYNC);
     g_analogFile    = open(LMS_ANALOG_DEVICE_NAME, O_RDWR | O_SYNC);
@@ -208,6 +215,29 @@ int InitSensors()
     return -1;
 }
 
+bool SensorsInitialized()
+{
+	return g_uartFile && g_iicFile && g_analogFile &&
+		g_uartSensors && g_iicSensors && g_analogSensors;
+}
+
+bool SensorsExit()
+{
+	if (!SensorsInitialized())
+        return false;
+	munmap(g_uartSensors, sizeof(UART));
+	munmap(g_iicSensors, sizeof(IIC));
+	munmap(g_analogSensors, sizeof(ANALOG));
+ 	close(g_uartFile);
+	close(g_iicFile);
+	close(g_analogFile);
+ 	g_uartFile = g_iicFile = g_analogFile = 0;
+	g_uartSensors = 0;
+	g_iicSensors = 0;
+	g_analogSensors = 0;
+ 	return true;
+}
+
 // function returns pointer
 void* readIicSensorRaw(int sensorPort){
     //#ifndef DISABLE_FAST_DATALOG_BUFFER
@@ -221,21 +251,21 @@ void* readIicSensorRaw(int sensorPort){
 /**
 * Getting the Data from a Uartport
 * modified by: Simón Rodriguez Perez
-* 		 date: 2015-02-28
-* 		 note: Readout of Uart-Port
+*        date: 2015-02-28
+*        note: Readout of Uart-Port
 *
 */
 void* readUartSensor(int sensorPort)
 {
-	if (!g_uartSensors)
-		return 0;
+    if (!g_uartSensors)
+        return 0;
     return g_uartSensors->Raw[sensorPort][g_uartSensors->Actual[sensorPort]];
 }
 
 void* readIicSensor(int sensorPort)
 {
-	if (!g_iicSensors)
-		return 0;
+    if (!g_iicSensors)
+        return 0;
     unsigned short currentSensorSlot = g_iicSensors->Actual[sensorPort];
     //(unsigned char)pIic->Raw[IIC_PORT][pIic->Actual[IIC_PORT]][0]
     return g_iicSensors->Raw[sensorPort][currentSensorSlot];
@@ -364,7 +394,7 @@ void* ReadSensorData(int sensorPort)
 }
 
 /********************************************************************************************/
-/**
+/*
 * Usercall for actual value of one Sensor
 * modified by: Simón Rodriguez Perez
 * 		 date: 2015-02-28

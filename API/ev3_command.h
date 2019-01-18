@@ -44,29 +44,32 @@ extern "C" {
 
 #include "ev3_constants.h"
 
-/**
- * Wait(unsignes long  ms)
- * @brief Sleep for specified time 
+/** @addtogroup CommandModuleFunctions
+ * @{
+ */
+
+/** @brief Wait some milliseconds.
+ *
+ * Make a task sleep for specified amount of time (in 1000ths of a second).
  *  
- * @param unsignes long ms
-*/ 
+ * @param ms The number of milliseconds to sleep.
+ */ 
 void Wait(unsigned long ms);
 
-/**
- * CurrentTick()
- * @brief Read the current system tick.
- * @return long ms since programmstart
-*/ 
+/** @brief Read the current system tick.
+ * @return The current system tick count.
+ */ 
 long CurrentTick();
 
-/**
- * int Random (int max)
- * @brief Generate random number. The returned value will range
- * between 0 and max (exclusive).
- * @param int max
+/** @brief Generate random number. 
+ * 
+ * The returned value will range between 0 and max (exclusive).
+ * @param max The maximum value desired.
  * @return random integer form 0...max-1
 */
 int Random(int max);
+
+/** @} */ // end of CommandModuleFunctions
 
 #endif // ev3_command_h
 

@@ -45,9 +45,12 @@ extern "C" {
 #include <limits.h>
 #include <errno.h>
 
-#include "ev3_constants.h"
-/* added by B.S */
 #include "ev3_command.h"
+#include "ev3_constants.h"
+
+/** @addtogroup SoundModuleFunctions
+ * @{
+ */
 
 typedef struct
 {
@@ -61,10 +64,21 @@ bool SoundClose();
 bool SoundExit();
 bool SoundInitialized();
 
+/**
+ * Play rmd-, wav- or rso-soundfile
+ */
 void PlayFileEx(char* pFileName, uint8_t volume, bool loop);
 
 #define PlayFile(_f) PlayFileEx((_f), 100, FALSE)
 
+/** 
+ * Play a single tone of the specified frequency and duration.
+ * The frequency is in Hz (see \ref ToneFreqConstants). The duration
+ * is in 1000ths of a second (see \ref ToneTimeConstants).
+ * @param frequency The desired tone frequency, in Hz
+ * @param duration The desired tone duration, in ms
+ * @param volume Volume
+ */
 void PlayToneEx(unsigned short frequency, unsigned short duration, uint8_t volume);
 
 #define PlayTone(_f, _d) PlayToneEx((_f), (_d), 100)
@@ -112,6 +126,8 @@ void MuteSound();
 void UnmuteSound();
 
 void ClearSound();
+
+/** @} */  // end of SoundModuleFunctions
 
 #endif // ev3_sound_h
 
