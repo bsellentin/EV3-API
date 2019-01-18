@@ -51,7 +51,7 @@ ButtonLedGlobals ButtonLedInstance;
 
 char HwVers[HWVERS_SIZE];
 
-int WriteToButtonLedDevice(unsigned char* bytes, int num_bytes)
+int WriteToButtonLedDevice(uint8_t * bytes, int num_bytes)
 {
   int result = -1;
   if (ButtonLedInstance.ButtonLedFile >= 0)
@@ -201,6 +201,7 @@ bool ButtonLedExit()
   if (!ButtonLedInitialized())
     return TRUE;
 
+  ButtonLedClose();
   ButtonLedCloseDevices();
 
   return TRUE;
@@ -257,7 +258,7 @@ void UpdateLed(uint8_t Pattern)
   if (!ButtonLedInitialized())
     return;
 
-  const uint8_t cmdLen = 2;
+  const int cmdLen = 2;
   const uint8_t zero = 48; // ASCII value of '0'
   uint8_t cmd[2];
 

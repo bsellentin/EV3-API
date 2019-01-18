@@ -2,8 +2,8 @@
 #ifndef IIC_H_
 #define IIC_H_
 
-#include "basictypes.h"
-#include "typedata.h"
+#include "ev3_basictypes.h"
+#include "ev3_typedata.h"
 
 /*! \page IicModuleMemory
  *
@@ -19,6 +19,13 @@
 
 #define   IIC_DATA_LENGTH         MAX_DEVICE_DATALENGTH
 #define   IIC_NAME_LENGTH         8
+#define   IIC_PORT_CHANGED        0x01         //!< Input port changed
+#define   IIC_DATA_READY          0x08         //!< Data is ready
+#define   IIC_WRITE_REQUEST       0x10         //!< Write request
+#define   IIC_SET_CONN            _IOWR('i',2,DEVCON)
+#define   IIC_READ_TYPE_INFO      _IOWR('i',3,IICCTL)
+#define   IIC_SETUP               _IOWR('i',5,IICDAT)
+#define   IIC_SET                 _IOWR('i',6,IICSTR)
 
 typedef   enum
 {
@@ -49,10 +56,6 @@ typedef   struct
 }
 IIC;
 
-
-#define   IIC_PORT_CHANGED       0x01         //!< Input port changed
-#define   IIC_DATA_READY         0x08         //!< Data is ready
-#define   IIC_WRITE_REQUEST      0x10         //!< Write request
 
 typedef   struct
 {
@@ -93,9 +96,10 @@ typedef   struct
 }
 IICSTR;
 
-#define   IIC_SET_CONN            _IOWR('i',2,DEVCON)
-#define   IIC_READ_TYPE_INFO      _IOWR('i',3,IICCTL)
-#define   IIC_SETUP               _IOWR('i',5,IICDAT)
-#define   IIC_SET                 _IOWR('i',6,IICSTR)
+
+/*\endverbatim
+ *
+ *  \n
+ */
 
 #endif //IIC_H_

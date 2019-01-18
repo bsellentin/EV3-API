@@ -32,7 +32,7 @@
  * \version 2
  * \note printf function added
  */
- 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,11 +41,12 @@ extern "C" {
 #define ev3_lcd_h
 
 /* Print Text with Variables - Ahmad Fatoum*/
+
 #ifdef __GNUC__
 #pragma GCC system_header
 #endif
 
-#include <stdint.h>
+//#include <stdint.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -113,18 +114,20 @@ typedef enum {
 #define ROP_SET 0x000000ff
 */
 
+/** @addtogroup DisplayModuleFunctions
+ * Functions that are part of the EV3 firmware's Display module.
+ * @{
+ */
+ 
 bool LcdInit();
-bool LcdOpen();
-bool LcdClose();
 bool LcdExit();
 bool LcdInitialized();
 
-void LcdRefresh();
 void LcdSetAutoRefresh(bool bOn);
 bool LcdUpdate();
 bool LcdClean();
-void LcdClearDisplay();
 bool LcdScroll(short Y);
+
 #if 0 /* unimplemented */
 bool LcdRect(char Color, short X0, short Y0, short X1, short Y1);
 bool LcdFillRect(char Color, short X0, short Y0, short X1, short Y1);
@@ -136,9 +139,17 @@ bool LcdCircle(char Color, short X, short Y, short R);
 bool LcdFillCircle(char Color, short X, short Y, short R);
 bool LcdVerticalBar(char Color, short X0, short Y0, short X1, short Y1, short Min, short Max, short Actual);
 #endif
+
+/*******************
+ * Redundant functions
+ */
+#if 0
+void LcdRefresh();
+#endif
+
 bool LcdSelectFont(uint8_t FontType);
 uint8_t* LcdGetDisplay();
-bool LcdText(char Color, short X, short Y, char const* Text);
+bool LcdText(char Color, short X, short Y, char* Text);
 bool LcdIcon(char Color, short X, short Y, char IconType, char IconNum);
 bool LcdBmpFile(char Color, short X, short Y, char* Name);
 bool LcdPicture(char Color, short X, short Y, IP pBitmap);
@@ -263,8 +274,6 @@ char NumOutEx(int x, int y, int value, unsigned long options);
  * Valid display option constants are listed in the \ref DisplayDrawOptionConstants group.
  * \sa SysDrawEllipse, DrawEllipseType
  *
- * \warning This function requires the enhanced NBC/NXC firmware version 1.28+.
- *
  * \param x The x value for the center of the ellipse.
  * \param y The y value for the center of the ellipse.
  * \param radiusX The x axis radius.
@@ -283,12 +292,12 @@ char EllipseOutEx(int x, int y, uint8_t radiusX, uint8_t radiusY, unsigned long 
  * the \ref DisplayDrawOptionConstants group.
  * \sa SysDrawPolygon, DrawPolygonType
  *
- * \warning This function requires the enhanced NBC/NXC firmware version 1.28+.
- *
  * \param points An array of LocationType points that define the polygon.
  * \param options The optional drawing options.
  * \return The result of the drawing operation.
  */
+
+#if 0
 char PolyOutEx(PLocationType points, unsigned long options);
 #define PolyOut(_p) PolyOutEx((_p), DRAW_OPT_NORMAL)
 
@@ -328,6 +337,7 @@ char GraphicOutEx(int x, int y, char* filename, unsigned long options);
 char GraphicArrayOutEx(int x, int y, uint8_t* data, unsigned long options);
 #define GraphicArrayOut(_x, _y, _d) GraphicArrayOutEx((_x), (_y), (_d), DRAW_OPT_NORMAL)
 
+#endif
 
 bool LcdTextf(char Color, short X, short Y, const char *fmt, ...);
 int LcdPrintf(char __color, const char * __fmt, ...);
@@ -338,6 +348,13 @@ int asprintf(char **, const char *, ...);
 int vasprintf(char **, const char *, va_list)
 #endif
 
+#if 0
+int Ev3Printf(const char *fmt, ...);
+int Ev3Println(const char *fmt, ...);
+void Ev3Clear();
+#endif
+
+/** @} */  // end of DisplayModuleFunctions
 
 #endif // ev3_lcd_h
 

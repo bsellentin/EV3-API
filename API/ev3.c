@@ -18,49 +18,38 @@
 
 #include "ev3.h"
 
-int InitEV3()
+static bool initialized;
+int __attribute__((constructor)) InitEV3 (void)
 {
+	if (EV3IsInitialized())
+	    return 1;
+
 	OutputInit();
-	InitSensors();
+	SensorsInit();
 	ButtonLedInit();
 	LcdInit();
-	LcdClean();
 	SoundInit();
+    
+	LcdClean();
 
+	initialized = true;
 	return 1;
 }
 
+int __attribute__((destructor)) FreeEV3()
 
-int CloseEV3()
 {
-	OutputClose();
-	ButtonLedClose();
-	SoundClose();
-
-	return 1;
-}
-
-
-int ExitEV3()
-{
-	
 	OutputExit();
+	SensorsExit();
 	ButtonLedExit();
 	LcdExit();
 	SoundExit();
+	initialized = false;
 
 	return 1;
 }
 
-int FreeEV3()
+bool EV3IsInitialized(void)
 {
-	OutputClose();
-	ButtonLedClose();
-	SoundClose();
-	OutputExit();
-	ButtonLedExit();
-	LcdExit();
-	SoundExit();
-
-	return 1;
+	return initialized;
 }

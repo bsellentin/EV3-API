@@ -37,21 +37,36 @@
 //#include <sys/ioctl.h>
 //#include <unistd.h>
 //#include "lms2012.h"
+#include <stdbool.h>
 #include "ev3_constants.h"
-#include "analog.h"
-#include "uart.h"
-#include "iic.h"
+#include "ev3_analog.h"
+#include "ev3_uart.h"
+#include "ev3_iic.h"
 
+/** @addtogroup InputModuleFunctions
+ * @{
+ */
 
 /**
  * Initializes sensor I/O.
  */
-int InitSensors();
+int SensorsInit();
+
+/**
+ * Check if sensors are initialized.
+ */
+bool SensorsInitialized();
+
+/**
+ * Unmap sensors and close fds.
+ */
+bool SensorsExit();
 
 /**
  * Reads the sensor value from a specific port.
- * Example: ReadSensor(INPUT_1)
- * Returns a raw sensor value.
+ * @param sensorPort The sensor port. See \ref InputPortConstants.
+ * @return A scaled sensor value.
+ * Example: ReadSensor(IN_1);
  */
 int ReadSensor(int sensorPort);
 
@@ -62,21 +77,24 @@ void ReadSensorHTIRSeeker2AC(int sensorPort, int *dir, int *s1, int *s2, int *s3
  * Returns pointer to the current sensor value.
  * The sensor value may be up to 32 bytes long - this function
  * can be used to access it if ReadSensor() is inadequate.
+ * @param sensorPort The sensor port. See \ref InputPortConstants.
  */
 void* ReadSensorData(int sensorPort);
 
 /**
  * Set sensor mode for a specific port.
- * Example: SetSensorMode(INPUT_1, COL_REFLECT)
+ * @param sensorPort The sensor port. See \ref InputPortConstants.
+ * @param name Name of sensormode. See \ref InputModuleDeviceNames.
+ * Example: SetSensorMode(IN_1, COL_REFLECT)
  */
 int SetSensorMode(int sensorPort, int name);
 
-/**
+/*
  * not ready
  */
 int GetSensorMode(int sensorPort);
 
-/**
+/*
  * Get sensor type for a specific port.
  * Only for developing
  * Example: GetSensorType(IN_1)
@@ -104,6 +122,7 @@ int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
  */
 int SetIRBeaconCH(int sensorPort, int channel);
 
+/** @} */  // end of InputModuleFunctions
 
 /***********************************/
 
@@ -115,62 +134,89 @@ int SetIRBeaconCH(int sensorPort, int channel);
 #define SENSOR_2 ReadSensor(IN_2)
 #define SENSOR_3 ReadSensor(IN_3)
 #define SENSOR_4 ReadSensor(IN_4)
- 
-#define NO_SEN -1           // No sensor connected
-//Touchsenor
-#define TOUCH 1             // Press
-#define BUMPS 2             // Count
-#define SetSensorTouch(_in) SetSensorMode((_in), TOUCH)
 
-//Lightsensor
-#define COL_REFLECT 3       // Reflect
-#define COL_AMBIENT 4       // Ambient
-#define COL_COLOR 5         // Color
-#define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
-#define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
-
-//Ultrasonic
-#define US_DIST_CM 6        // Dist in cm
-#define US_DIST_MM 7        // Dist in mm
-#define US_DIST_IN 8        // Dist in inch
+/** @addtogroup InputModuleConstants
+ * @{
+ * @defgroup InputModuleDeviceNames Input device names constants
+ * Constants for use in the SetSensorMode() function
+ * @{
+ */
+#define NO_SEN -1           //!< No sensor connected
+//EV3-Touchsenor
+#define TOUCH 1             //!< EV3 Touch press
+#define BUMPS 2             //!< EV3 Touch bump
+//EV3-Lightsensor
+#define COL_REFLECT 3       //!< EV3 Color Reflect
+#define COL_AMBIENT 4       //!< EV3 Color Ambient
+#define COL_COLOR 5         //!< EV3 Color Color
+//EV3-Ultrasonic
+#define US_DIST_CM 6        //!< EV3 Ultrasonic distance in cm
+#define US_DIST_MM 7        //!< EV3 Ultrasonic distance in mm
+#define US_DIST_IN 8        //!< EV3 Ultrasonic distance in inch
 #define US_LISTEN 9
-#define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
-
-//Gyroskop
-#define GYRO_ANG 10         // angle
-#define GYRO_RATE 11        // rate
-#define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
-
-//Infrared
-#define IR_PROX 12          // Proximity
-#define IR_SEEK 13          // Seek
-#define IR_REMOTE 14        // Remote Control
-#define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
-
+//EV3-Gyroskop
+#define GYRO_ANG 10         //!< EV3 Gyro angle
+#define GYRO_RATE 11        //!< EV3 Gyro rate
+//EV3-Infrared
+#define IR_PROX 12          //!< EV3 Infrared Proximity
+#define IR_SEEK 13          //!< EV3 Infrared Seek
+#define IR_REMOTE 14        //!< EV3 Infrared Remote Control
 //NXT 
-#define NXT_IR_SEEKER 20    // Infrared Seeker
-#define NXT_TEMP_C 21       // Temperature in C
-#define NXT_TEMP_F 22       // Temperature in F
-#define NXT_SND_DB 23       // Sound Decibels
-#define NXT_SND_DBA 24      // Sound A-Weighted Decibels
-#define NXT_TOUCH 25        // 
-#define NXT_REFLECT 26      // Light sensor V1
-#define NXT_AMBIENT 27
-#define NXT_COL_REF 28      // Light sensor V2
-#define NXT_COL_AMB 29
-#define NXT_COL_COL 30
-#define NXT_US_CM 31        // Ultrasonic sensor
-#define NXT_US_IN 32
-#define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
-#define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
-#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
-#define SetSensorNXTUS(_in) SetSensorMode((_in), NXT_US_CM)
-
+#define NXT_IR_SEEKER 20    //!< NXT Infrared Seeker
+#define NXT_TEMP_C 21       //!< NXT Temperature in C
+#define NXT_TEMP_F 22       //!< NXT Temperature in F
+#define NXT_SND_DB 23       //!< NXT Sound Decibels
+#define NXT_SND_DBA 24      //!< NXT Sound A-Weighted Decibels
+#define NXT_TOUCH 25        //!< NXT Touch 
+#define NXT_REFLECT 26      //!< NXT Light sensor V1 reflected
+#define NXT_AMBIENT 27      //!< NXT Light sensor V1 ambient
+#define NXT_COL_REF 28      //!< NXT Color sensor V2 reflected
+#define NXT_COL_AMB 29      //!< NXT Color sensor V2 ambient
+#define NXT_COL_COL 30      //!< NXT Color sensor V2 color
+#define NXT_US_CM 31        //!< NXT Ultrasonic sensor cm
+#define NXT_US_IN 32        //!< NXT Ultrasonic sensor inch
 // HiTechnic
 #define HT_DIR_DC 33        // Infrared Seeker DC constant IR signals
 #define HT_DIR_AC 34        // AC modulated IR signals
 #define HT_DIR_DCALL 35     // DC modulated all values IR signals
 #define HT_DIR_ACALL 36     // AC modulated all values IR signals
+/** @} */  // end of InputModuleDeviceNames
+/** @} */  // end of InputModuleConstants
+
+/** @addtogroup InputModuleFunctions
+ * @{
+ */
+/** EV3 Touch press
+ */
+#define SetSensorTouch(_in) SetSensorMode((_in), TOUCH)
+/** EV3 Color Reflect
+ */
+#define SetSensorLight(_in) SetSensorMode((_in), COL_REFLECT)
+/** EV3 Color Color
+ */
+#define SetSensorColor(_in) SetSensorMode((_in), COL_COLOR)
+/** EV3 Ultrasonic distance in cm
+ */
+#define SetSensorUS(_in) SetSensorMode((_in), US_DIST_CM)
+/** EV3 Gyro angle
+ */
+#define SetSensorGyro(_in) SetSensorMode((_in), GYRO_ANG)
+/** EV3 Infrared Proximity
+ */
+#define SetSensorIR(_in) SetSensorMode((_in), IR_PROX)
+/** NXT Touch
+ */
+#define SetSensorNXTTouch(_in) SetSensorMode((_in), NXT_TOUCH)
+/** NXT Light sensor V1 reflected
+ */
+#define SetSensorNXTLight(_in) SetSensorMode((_in), NXT_REFLECT)
+/** NXT Sound Decibels
+ */
+#define SetSensorNXTSound(_in) SetSensorMode((_in), NXT_SND_DB)
+/** NXT Ultrasonic sensor cm
+ */
+#define SetSensorNXTUS(_in) SetSensorMode((_in), NXT_US_CM)
+/** @} */  // end of InputModuleFunctions
 
 // Infrared Beacon Buttons
 #define BEACON_CH_1 0

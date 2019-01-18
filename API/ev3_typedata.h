@@ -1,6 +1,8 @@
 
-#ifndef TYPEDATA_H_
-#define TYPEDATA_H_
+#ifndef EV3_TYPEDATA_H_
+#define EV3_TYPEDATA_H_
+
+#include <ev3_basictypes.h>
 
 /*! \struct TYPES
  *          Device type data

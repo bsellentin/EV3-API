@@ -49,7 +49,7 @@ extern "C" {
 #define FALSE 0 /*!< A false value */
 
 #define INPUTS         4   /*!< Number of input  ports in the system */
-#define OUTPUTS        4   //!< Number of output ports in the system
+#define OUTPUTS        4   /*!< Number of output ports in the system */
 #define NUM_LEDS       4   /*!< Number of LEDs in the system */
 #define LCD_WIDTH      178 /*!< LCD horizontal pixels */
 #define LCD_HEIGHT     128 /*!< LCD vertical pixels */
@@ -66,10 +66,6 @@ extern "C" {
 
 /** @} */  // end of MiscConstants group
 
-
-/** @addtogroup OutputModule
- * @{
- */
 /** @addtogroup OutputModuleConstants
  * @{
  */
@@ -91,30 +87,17 @@ extern "C" {
 #define OUT_BCD  0x0e /*!< Output ports B, C, and D */
 #define OUT_ABCD 0x0f /*!< Output ports A, B, C, and D */
 #define OUT_ALL  0x0f /*!< All output ports (A-D) */
-
 #define OUT_MASK 0x0f /*!< The output port mask */
 /** @} */  // end of OutputPortConstants group
-
-/** @defgroup InputPortConstants Input port constants
- * Input port constants are used when calling sensor API functions.
- * @{
- */
-#define IN_1    0x0 /*!< Input port 1 */
-#define IN_2    0x1 /*!< Input port 2 */
-#define IN_3    0x2 /*!< Input port 3 */
-#define IN_4    0x3 /*!< Input port 4 */
-
-/** @} */  // end of InputPortConstants group
-
 
 /** @defgroup OutModeConstants Output port mode constants
  * Use these constants to configure the desired mode for the
  * specified motor(s): coast, brake, or on.
  * @{
  */
-#define OUT_FLOAT 0x00
-#define OUT_OFF   0x40
-#define OUT_ON    0x80
+#define OUT_FLOAT 0x00 //!< coast
+#define OUT_OFF   0x40 //!< brake
+#define OUT_ON    0x80 //!< on
 /** @} */  // end of OutModeConstants group
 
 /** @defgroup OutDirConstants Output port direction constants
@@ -122,9 +105,9 @@ extern "C" {
  * specified motor(s): reverse, forward, or toggle.
  * @{
  */
-#define OUT_REV    0x00
-#define OUT_TOGGLE 0x40
-#define OUT_FWD    0x80
+#define OUT_REV    0x00 //!< reverse direction
+#define OUT_TOGGLE 0x40 //!< toggle direction
+#define OUT_FWD    0x80 //!< forward direction
 /** @} */  // end of OutDirConstants group
 
 #define OUT_POWER_DEFAULT -127
@@ -134,7 +117,7 @@ extern "C" {
  * specified motor(s): none, speed regulation, multi-motor synchronization.
  * For the EV3 only the speed regulation constant has any effect. If you set
  * power instead of speed then no regulation is in effect (equivalent to
- * using OUT_REGMODE_IDLE with the NXT.
+ * using OUT_REGMODE_IDLE with the EV3.
  * @{
  */
 #define OUT_REGMODE_IDLE  0 /*!< No motor regulation. */
@@ -155,9 +138,26 @@ extern "C" {
 #define RESET_BLOCKANDTACHO  0x28 /*!< Reset both the internal counter and the block counter */
 #define RESET_ALL            0x68 /*!< Reset all tachometer counters */
 /** @} */  // end of TachoResetConstants group
+/** @} */  // end of OutputModuleConstants group
 
 
-// Reserved device types
+/** @addtogroup InputModuleConstants
+ * @{
+ */
+/** @defgroup InputPortConstants Input port constants
+ * Input port constants are used when calling sensor API functions.
+ * @{
+ */
+#define IN_1    0x0 /*!< Input port 1 */
+#define IN_2    0x1 /*!< Input port 2 */
+#define IN_3    0x2 /*!< Input port 3 */
+#define IN_4    0x3 /*!< Input port 4 */
+/** @} */  // end of InputPortConstants group
+
+/** @defgroup InputDeviceTypeConstants Input device type constants
+ * Reserved device types
+ * @{
+ */
 #define DEVICE_TYPE_NXT_TOUCH           1  //!< Device is NXT touch sensor
 #define DEVICE_TYPE_NXT_LIGHT           2  //!< Device is NXT light sensor
 #define DEVICE_TYPE_NXT_SOUND           3  //!< Device is NXT sound sensor
@@ -167,17 +167,17 @@ extern "C" {
 #define DEVICE_TYPE_TACHO               7  //!< Device is a tacho motor
 #define DEVICE_TYPE_MINITACHO           8  //!< Device is a mini tacho motor
 #define DEVICE_TYPE_NEWTACHO            9  //!< Device is a new tacho motor
-#define DEVICE_TYPE_EV3_TOUCH          16
-#define DEVICE_TYPE_EV3_COL            29
-#define DEVICE_TYPE_EV3_US             30
-#define DEVICE_TYPE_EV3_GYRO           32
-#define DEVICE_TYPE_EV3_IR             33
+#define DEVICE_TYPE_EV3_TOUCH          16  //!< Device is a EV3 touch sensor
+#define DEVICE_TYPE_EV3_COL            29  //!< Device is a EV3 color sensor
+#define DEVICE_TYPE_EV3_US             30  //!< Device is a EV3 ultrasonic sensor
+#define DEVICE_TYPE_EV3_GYRO           32  //!< Device is a EV3 gyro sensor
+#define DEVICE_TYPE_EV3_IR             33  //!< Device is a EV3 infrared sensor
 #define DEVICE_TYPE_THIRD_PARTY_START  50
 #define DEVICE_TYPE_HT_DIR             52  //!< Device is HiTechnic Infrared Seeker
 #define DEVICE_TYPE_THIRD_PARTY_END    99
 #define DEVICE_TYPE_IIC_UNKNOWN       100
 #define DEVICE_TYPE_NXT_TEST          101  //!< Device is a NXT ADC test sensor
-#define DEVICE_TYPE_NXT_IIC           123  //!< Device is NXT IIC sensor
+#define DEVICE_TYPE_NXT_IIC           123  //!< Device is a NXT IIC sensor
 #define DEVICE_TYPE_TERMINAL          124  //!< Port is connected to a terminal
 #define DEVICE_TYPE_UNKNOWN           125  //!< Port not empty but type has not been determined
 #define DEVICE_TYPE_NONE              126  //!< Port empty or not available
@@ -195,7 +195,12 @@ extern "C" {
 #define DEVICE_LOGBUF_SIZE    300
 //#define IIC_DATA_LENGTH       MAX_DEVICE_DATALENGTH  // in iic.h
 //#define IIC_NAME_LENGTH       8
+/** @} */  // end of InputDeviceTypeConstants
 
+/** @defgroup InputConnectionTypeConstants Input connection type constants
+ * Following defines sets the input and output port connection type
+ * @{
+ */
 // connection types
 #define CONN_UNKNOWN            111  //!< Connection is fake (test)
 #define CONN_DAISYCHAIN         117  //!< Connection is daisy chained
@@ -209,15 +214,12 @@ extern "C" {
 #define CONN_OUTPUT_TACHO       125  //!< Connection type is LMS2012 tacho motor with series ID resistance
 #define CONN_NONE               126  //!< Port empty or not available
 #define CONN_ERROR              127  //!< Port not empty and type is invalid
+/** @} */  // end of InputConnectionTypeConstants group
+/** @} */  // end of InputModuleConstants
 
-/** @addtogroup ButtonModule
+/** addtogroup ButtonModuleConstants
  * @{
  */
-/** @defgroup ButtonModuleConstants Button module constants
- * Constants that are part of the NXT firmware's Button module.
- * @{
- */
-
 /** @defgroup ButtonNameConstants Button name constants
  * Constants to specify which button to use with button module functions.
  * \sa ButtonPressed(), ButtonState(), ReadButtonEx(),
@@ -265,8 +267,25 @@ extern "C" {
 #define BTNSTATE_NONE               0x10 /*!< The default button state. */
 /** @} */  // end of ButtonStateConstants group
 
+/** @defgroup LedPatternConstants LED pattern constants
+ * Constants for use with SetLedPattern() function.
+ * \sa SetLedPattern()
+ * @{
+ */
+#define LED_BLACK        0  //!< LED black pattern
+#define LED_GREEN        1  //!< LED green pattern
+#define LED_RED          2  //!< LED red pattern
+#define LED_ORANGE       3  //!< LED orange pattern
+#define LED_GREEN_FLASH  4  //!< LED green flash pattern
+#define LED_RED_FLASH    5  //!< LED red flash pattern
+#define LED_ORANGE_FLASH 6  //!< LED orange flash pattern
+#define LED_GREEN_PULSE  7  //!< LED green pulse pattern
+#define LED_RED_PULSE    8  //!< LED red pulse pattern
+#define LED_ORANGE_PULSE 9  //!< LED orange pulse pattern
+#define NUM_LED_PATTERNS 10 //!< The number of LED patterns
+/** @} */  // end of LedPatternConstants group
 /** @} */  // end of ButtonModuleConstants group
-/** @} */  // end of ButtonModule group
+
 
 /*
 #define NXTCOLOR_IDX_RED    0 //!< Access the red value from color sensor value arrays
@@ -300,11 +319,18 @@ extern "C" {
 #define FILETYPE_USBSTICK 0x20
 #define NUM_FILETYPES     0x21 //!< Maximum icon types supported by the VM
 
-#define FONTTYPE_NORMAL 0
-#define FONTTYPE_SMALL  1
-#define FONTTYPE_LARGE  2
-#define FONTTYPE_TINY   3
-#define NUM_FONTTYPES   4 //!< Maximum font types supported by the VM
+/** @addtogroup DisplayModuleConstants
+ * @{
+ *   @defgroup DisplayModuleFonttypeConstants Fonttype constants
+ *   @{
+ */
+#define FONTTYPE_NORMAL 0 //!< Normal font
+#define FONTTYPE_SMALL  1 //!< Small font
+#define FONTTYPE_LARGE  2 //!< Large font
+#define FONTTYPE_TINY   3 //!< Tiny font
+#define NUM_FONTTYPES   4 // Maximum font types supported by the VM
+/** @} */ // end of DisplayModuleFonttypeConstants
+/** @} */ // end of DisplayModuleConstants
 
 // Icon Types Avaliable
 #define ICONTYPE_NORMAL 0
@@ -424,18 +450,6 @@ extern "C" {
 #define IP_SIZE       16  //!< Max WIFI IP size including zero termination
 #define BT_SIZE       13  //!< Max bluetooth address size including zero termination
 
-#define LED_BLACK        0  //!< LED black pattern
-#define LED_GREEN        1  //!< LED green pattern
-#define LED_RED          2  //!< LED red pattern
-#define LED_ORANGE       3  //!< LED orange pattern
-#define LED_GREEN_FLASH  4  //!< LED green flash pattern
-#define LED_RED_FLASH    5  //!< LED red flash pattern
-#define LED_ORANGE_FLASH 6  //!< LED orange flash pattern
-#define LED_GREEN_PULSE  7  //!< LED green pulse pattern
-#define LED_RED_PULSE    8  //!< LED red pulse pattern
-#define LED_ORANGE_PULSE 9  //!< LED orange pulse pattern
-#define NUM_LED_PATTERNS 10 //!< The number of LED patterns
-
 
 /** @addtogroup CommandModuleConstants
  * @{
@@ -491,21 +505,15 @@ extern "C" {
 #define SEC_30  30000 /*!< 30 seconds */
 #define MIN_1   60000 /*!< 1 minute */
 
-/** @} */  // end of TimeConstants group
+/** @} */ // end of TimeConstants group
 /** @} */ // end of CommandModuleConstants group
 
-/** @addtogroup SoundModule
- * @{
- */
- 
-/** @defgroup SoundModuleConstants Sound module constants
- * Constants that are part of the EV3 firmware's Sound module.
- * @{
- */
 
-/** @defgroup SoundStateConstants Sound State constants
- * Constants for use with the Sound module state functions.
+/** @addtogroup SoundModuleConstants
  * @{
+ *   @defgroup SoundStateConstants Sound State constants
+ *   Constants for use with the Sound module state functions.
+ *   @{
  */
 #define SOUND_STATE_IDLE         0 /*!< Idle, ready for start sound */
 #define SOUND_STATE_SETUP_FILE   1 /*!< Transient state when playing a sound file */
@@ -528,7 +536,7 @@ extern "C" {
 #define SOUND_FAST_UP     5 /*!< Play the standard fast up sound */
 /** @} */  // end of RCXSoundConstants group
 
-/** @defgroup ToneConstants Tone constants
+/** @defgroup ToneFreqConstants Tone frequency constants
  * Constants for use in the PlayTone() API function.
  * \sa PlayTone()
  * @{
@@ -605,25 +613,28 @@ extern "C" {
 #define TONE_A7     3520 /*!< Seventh octave A */
 #define TONE_AS7    3729 /*!< Seventh octave A sharp */
 #define TONE_B7     3951 /*!< Seventh octave B */
+/** @} */  // end of ToneFreqConstants group
 
+/** @defgroup ToneTimeConstants Tone time constants
+ * Constants for use in the PlayTone() API function.
+ * @{
+ */
 #define NOTE_WHOLE   1000            /*!< The duration of a whole note (ms) */
 #define NOTE_HALF    (NOTE_WHOLE/2)  /*!< The duration of a half note (ms) */
 #define NOTE_QUARTER (NOTE_WHOLE/4)  /*!< The duration of a quarter note (ms) */
 #define NOTE_EIGHT   (NOTE_WHOLE/8)  /*!< The duration of an eighth note (ms) */
 #define NOTE_SIXTEEN (NOTE_WHOLE/16) /*!< The duration of an sixteenth note (ms) */
-
-/** @} */  // end of ToneConstants group
-
+/** @} */  // end of ToneTimeConstants group
 /** @} */  // end of SoundModuleConstants group
-/** @} */  // end of SoundModule group
 
 
 /** @addtogroup DisplayModuleConstants
  * @{
  */
+
 /** @defgroup LineConstants Line number constants
  * Line numbers for use with DrawText system function.
- * \sa TextOut(), NumOut()
+ * \sa TextOut(), NumOut(), LcdText(), LcdTextf()
  * @{
  */
 #define LCD_LINE8 112 //*!< The 8th line of the LCD screen
@@ -635,18 +646,9 @@ extern "C" {
 #define LCD_LINE2 16  //*!< The 2nd line of the LCD screen
 #define LCD_LINE1 0   //*!< The 1st line of the LCD screen
 /** @} */  // end of LineConstants group
-/** @} */  // end of DisplayModuleConstants group
 
-/** @addtogroup DisplayModule
- * @{
- */
-/** @defgroup DisplayModuleConstants Display module constants
- * Constants that are part of the NXT firmware's Display module.
- * @{
- */
 /** @defgroup DisplayExecuteFunctionConstants DisplayExecuteFunction constants
  * Constants that are for use with the DisplayExecuteFunction system call.
- * \warning These options require the enhanced NBC/NXC firmware
  * @{
  */
 #define DISPLAY_ERASE_ALL       0x00     /*!< W - erase entire screen     (CMD,x,x,x,x,x) */
@@ -674,10 +676,13 @@ extern "C" {
  * The 'CopyOptions' parameter from each instruction in the RIC file then controls
  * graphic operations, but the screen-clearing bits are ignored.
  * \sa TextOut(), NumOut(), PointOut(), LineOut(), CircleOut(), RectOut(),
- * PolyOut(), EllipseOut(), FontTextOut(), FontNumOut(), GraphicOut(),
- * GraphicArrayOut()
- * \warning These options require the enhanced NBC/NXC firmware
- * @{
+ * EllipseOut(), 
+ */
+#ifndef DOXYGEN_SKIP
+/* * PolyOut(), GraphicOut(), GraphicArrayOut()
+ */
+#endif
+/** @{
  */
 #define DRAW_OPT_NORMAL                     (0x0000) /*!< Normal drawing */
 #define DRAW_OPT_CLEAR_WHOLE_SCREEN         (0x0001) /*!< Clear the entire screen before drawing */
@@ -701,11 +706,14 @@ extern "C" {
 
 #define DRAW_OPT_CLEAR_LINE                 (0x0800) /*!< When drawing text, clear the entire line before drawing the text */
 #define DRAW_OPT_CLEAR_EOL                  (0x1000) /*!< When drawing text, clear to the end of the line after drawing the text */
+/** @} */  // end of DisplayDrawOptionConstants
+/** @} */  // end of DisplayModuleConstants
+
 
 /** @addtogroup TimerModule
  * @{
  */
-/** @addtogroup TimerModuleConstants
+/** @defgroup TimerModuleConstants Timer module constants
  * @{
  */
 #define CS_TIMER_1    0 //!< Centisecond timer number 1 (100 ticks per second)
@@ -981,6 +989,7 @@ extern "C" {
 #define opMailboxClose              0xDD /*!< opMailboxClose */
 #define opTest                      0xFF /*!< opTest */
 /** @} */  // end of OpcodeConstants group
+
 
 #endif  // ev3_constants_h
 

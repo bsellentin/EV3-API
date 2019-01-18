@@ -1,9 +1,9 @@
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef EV3_UART_H_
+#define EV3_UART_H_
 
-#include "basictypes.h"
-#include "typedata.h"
+#include "ev3_basictypes.h"
+#include "ev3_typedata.h"
 
 /*! \page UartModuleMemory
  *
@@ -17,8 +17,15 @@
  *  \verbatim
  */
 
-#define    UART_DATA_LENGTH		MAX_DEVICE_DATALENGTH  // in ev3_constants
-#define    UART_BUFFER_SIZE		64
+#define    UART_DATA_LENGTH         MAX_DEVICE_DATALENGTH   // in ev3_constants
+#define    UART_BUFFER_SIZE         64
+#define    UART_PORT_CHANGED        0x01                    //!< Input port changed
+#define    UART_DATA_READY          0x08                    //!< Data is ready
+#define    UART_WRITE_REQUEST       0x10                    //!< Write request
+#define    UART_SET_CONN            _IOWR('u',0,DEVCON)
+#define    UART_READ_MODE_INFO      _IOWR('u',1,UARTCTL)
+#define    UART_NACK_MODE_INFO      _IOWR('u',2,UARTCTL)
+#define    UART_CLEAR_CHANGED       _IOWR('u',3,UARTCTL)
 
 typedef   struct
 {
@@ -44,11 +51,6 @@ UART;
  */
 
 
-#define   UART_PORT_CHANGED       0x01        //!< Input port changed
-#define   UART_DATA_READY         0x08        //!< Data is ready
-#define   UART_WRITE_REQUEST      0x10        //!< Write request
-
-
 typedef   struct
 {
   TYPES   TypeData;
@@ -57,9 +59,5 @@ typedef   struct
 }
 UARTCTL;
 
-#define   UART_SET_CONN           _IOWR('u',0,DEVCON)
-#define   UART_READ_MODE_INFO     _IOWR('u',1,UARTCTL)
-#define   UART_NACK_MODE_INFO     _IOWR('u',2,UARTCTL)
-#define   UART_CLEAR_CHANGED      _IOWR('u',3,UARTCTL)
 
-#endif //UART_H_
+#endif //EV3_UART_H_
