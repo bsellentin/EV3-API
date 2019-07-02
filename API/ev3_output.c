@@ -1455,7 +1455,8 @@ void OnForEx(uint8_t Outputs, int Time, int8_t Power, uint8_t reset)
   if (Power != OUT_POWER_DEFAULT)
 	SetPower(Outputs, Power);
   OnEx(Outputs, reset);
-  usleep(Time);
+  //usleep(Time);
+  Wait(Time);
   OffEx(Outputs, reset);
 }
 

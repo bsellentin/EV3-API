@@ -62,7 +62,7 @@
  */
  
 // EV3-TOUCH
-//#define TOUCH_TYPE 16             // in ev3_constants: reserved device types
+//#define DEVICE_TYPE_EV3_TOUCH 16  // in ev3_constants: reserved device types
 #define TOUCH_PRESS_MODE 0          //!< EV3-Touch press
 #define TOUCH_BUMP_MODE 1           //!< EV3-Touch count
 

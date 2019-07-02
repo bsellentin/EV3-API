@@ -261,7 +261,7 @@ void OnForSyncEx(uint8_t Outputs, int Time, int8_t Speed, short Turn, bool Stop)
 
 void OnForEx(uint8_t Outputs, int Time, int8_t Power, uint8_t reset);
 
-#define OnFor(outputs, time) OnForEx((outputs), (time), OUT_POWER_DEFAULT, RESET_NONE)
+#define OnFor(outputs, time, power) OnForEx((outputs), (time), (power), RESET_NONE)
 
 /** This function enables resetting the tacho count for the individual output ports.
  * The tacho count is also resetted at program start.

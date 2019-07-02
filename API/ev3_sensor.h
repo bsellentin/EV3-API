@@ -111,14 +111,14 @@ int ResetGyro();
 /**
  * Set sensor mode for a all ports
  * Note: Can be only called once
- * Example: setAllSensorMode(TOUCH_PRESS, US_DIST_MM, NO_SEN, COL_COLOR)
+ * Example: SetAllSensorMode(TOUCH_PRESS, US_DIST_MM, NO_SEN, COL_COLOR)
  */
 int SetAllSensorMode(int name_1, int name_2, int name_3, int name_4);
 
 /**
  * Select channel for the Beacon control
  * Note: Can be changed while running
- * Example: setSensorMode(IN_2, BEACON_CH_1)
+ * Example: SetIRBeaconCH(IN_2, BEACON_CH_1)
  */
 int SetIRBeaconCH(int sensorPort, int channel);
 

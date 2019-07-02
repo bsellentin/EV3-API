@@ -65,7 +65,8 @@ bool SoundExit();
 bool SoundInitialized();
 
 /**
- * Play rmd-, wav- or rso-soundfile
+ * Play rmd-, wav- or rso-soundfile.
+ * Check that the wav-format is PCM, Mono 8 bits.
  */
 void PlayFileEx(char* pFileName, uint8_t volume, bool loop);
 
